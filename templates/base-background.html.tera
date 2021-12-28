@@ -1,0 +1,45 @@
+{% extends "base" %}
+
+{% block head %}
+    <style>
+        .background {
+            width: 100vw;
+            height: 100vh;
+            content: ' ';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            -webkit-background-size: cover !important;
+            background-size: cover !important;
+            background-position: center center;
+            z-index: -1;
+        }
+        @media only screen and (max-width: 1920px) {
+            .background {
+                background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('/static/PIA13932-1920-s.webp');
+            }
+        }
+        @media only screen and (min-width: 1921px) and (max-width: 3840px) {
+            .background {
+                background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url('/static/PIA13932-3840-s.webp');
+            }
+        }
+        .copyright-note {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+        }
+
+    </style>
+    {% block head_inner %}{% endblock %}
+{% endblock %}
+
+{% block main %}
+    <div class="background"></div>
+    <div class="copyright-note is-size-7 has-text-white">
+        Background image by images.nasa.gov, icons by openmoji.org {% block copyright %}{% endblock %}
+    </div>
+{% endblock %}

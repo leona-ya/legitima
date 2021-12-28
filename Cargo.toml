@@ -1,0 +1,18 @@
+[package]
+name = "legitima"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = { version = "0.5.0-rc.1", features = ["secrets"] }
+rocket_dyn_templates = { version = "0.1.0-rc.1", features = ["tera"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.71"
+ory-hydra-client = "1.10.6"
+ldap3 = "0.9.3"
+r2d2-ldap = "0.1.1"
+rocket_sync_db_pools = { git = "https://github.com/em0lar/rocket_sync_db_pools_ldap", features = [ "ldap_pool"] }
+chrono = { version = "0.4.19", default-features = false, features = ["std", "clock"] }
+thiserror = "1.0"

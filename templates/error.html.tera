@@ -1,0 +1,23 @@
+{% extends "base-background" %}
+{% block head_inner %}
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="columns">
+        <div class="card column is-10-mobile is-offset-1-mobile is-6-tablet is-offset-3-tablet is-4-desktop is-offset-4-desktop">
+            <div class="card-content">
+                <div class="content">
+                    <h3 class="has-text-weight-light is-size-3">{{ error_title }}</h3>
+                    <hr>
+                    <h5>{{ error_message }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

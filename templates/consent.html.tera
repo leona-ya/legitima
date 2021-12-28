@@ -1,0 +1,47 @@
+{% extends "base-background" %}
+{% block head_inner %}
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="columns">
+        <div class="card column is-10-mobile is-offset-1-mobile is-6-tablet is-offset-3-tablet is-4-desktop is-offset-4-desktop">
+            <div class="card-content">
+                <div class="content">
+                    <h3 class="has-text-weight-light is-size-3">{{ app_name }}</h3>
+                    <h4 class="has-text-weight-bold is-size-4">Consent</h4>
+                    <hr>
+                    {% if message %}
+                        <article class="message is-warning">
+                            <div class="message-header">
+                                <p>Warning</p>
+                            </div>
+                            <div class="message-body">
+                                {{ message }}
+                            </div>
+                        </article>
+                    {% endif %}
+                    <h4 class="is-text-4 has-text-weight-medium"><a class="has-text-weight-bold" href="{{ client_uri }}" target="_blank">{{ client_name }}</a> would like to</h4>
+                    {% for scope in requested_scopes %}
+                        <div class="icon-text is-align-items-center">
+                            <div class="icon is-large">
+                                <img src="/static/{{ scope.icon }}" alt="">
+                            </div>
+                            {{ scope.short_description }}
+                        </div>
+                        <br>
+                    {% endfor %}
+                    <div class="is-flex is-justify-content-space-between">
+                        <a href="/consent/reject?consent_challenge={{ consent_challenge }}" class="button is-danger">Decline</a>
+                        <a href="/consent/approve?consent_challenge={{ consent_challenge }}" class="button is-success">Accept</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

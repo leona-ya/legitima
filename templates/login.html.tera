@@ -1,0 +1,48 @@
+{% extends "base-background" %}
+{% block head_inner %}
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="columns">
+        <div class="card column is-10-mobile is-offset-1-mobile is-6-tablet is-offset-3-tablet is-4-desktop is-offset-4-desktop">
+            <div class="card-content">
+                <div class="content">
+                    <h3 class="has-text-weight-light is-size-3">{{ app_name }}</h3>
+                    <h4 class="has-text-weight-bold is-size-4">Login</h4>
+                    <hr>
+                    {% if message %}
+                    <article class="message is-warning">
+                        <div class="message-header">
+                            <p>Warning</p>
+                        </div>
+                        <div class="message-body">
+                            {{ message }}
+                        </div>
+                    </article>
+                    {% endif %}
+                    <form method="post">
+                        <div class="field">
+                            <label class="label">Username</label>
+                            <div class="control">
+                                <input class="input" name="username" type="text">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Password</label>
+                            <div class="control">
+                                <input class="input" name="password" type="password">
+                            </div>
+                        </div>
+                        <button class="button is-success">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
