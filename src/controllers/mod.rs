@@ -1,3 +1,4 @@
-pub mod login;
-pub mod errors;
-pub mod consent;
+pub(crate) mod auth;
+pub(crate) mod oidc;
+
+pub(crate) mod errors;

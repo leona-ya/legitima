@@ -10,7 +10,7 @@ mod error;
 mod routes;
 
 #[database("ldap")]
-pub struct DBLdapConn(ldap3::LdapConn);
+pub(crate) struct DBLdapConn(ldap3::LdapConn);
 
 #[rocket::main]
 async fn main() {

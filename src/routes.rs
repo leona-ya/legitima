@@ -4,7 +4,7 @@ use rocket::fs::FileServer;
 use rocket::{Build, Rocket};
 use rocket_dyn_templates::Template;
 
-pub fn build() -> Rocket<Build> {
+pub(crate) fn build() -> Rocket<Build> {
     let static_root_path = match option_env!("LEGITIMA_STATIC_ROOT_PATH") {
         Some(env) => format!("{}/static/", env),
         None => "static/".to_owned(),
@@ -19,19 +19,21 @@ pub fn build() -> Rocket<Build> {
             ],
         )
         .mount(
-            "/login",
+            "/auth",
             routes![
-                crate::controllers::login::auth_index,
-                crate::controllers::login::index,
-                crate::controllers::login::submit
+                crate::controllers::auth::login::auth_login,
+                crate::controllers::auth::login::login,
+                crate::controllers::auth::login::submit
             ],
         )
         .mount(
-            "/consent",
+            "/oidc",
             routes![
-                crate::controllers::consent::index,
-                crate::controllers::consent::approve,
-                crate::controllers::consent::reject
+                crate::controllers::oidc::login::auth_index,
+                crate::controllers::oidc::login::index,
+                crate::controllers::oidc::consent::index,
+                crate::controllers::oidc::consent::approve,
+                crate::controllers::oidc::consent::reject
             ],
         )
         .mount("/static", FileServer::from(static_root_path))

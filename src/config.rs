@@ -3,10 +3,10 @@ use rocket::fairing::AdHoc;
 use rocket::serde::Deserialize;
 
 #[derive(Deserialize)]
-pub struct HydraConfig {
+pub(crate) struct HydraConfig {
     admin_endpoint_url: String,
-    pub consent_remember_me: bool,
-    pub consent_remember_me_for: i64,
+    pub(crate) consent_remember_me: bool,
+    pub(crate) consent_remember_me_for: i64,
 }
 
 impl HydraConfig {
@@ -19,9 +19,9 @@ impl HydraConfig {
 }
 
 #[derive(Deserialize)]
-pub struct AppConfig {
-    pub name: String,
-    pub ldap_user_base_dn: String,
+pub(crate) struct AppConfig {
+    pub(crate) name: String,
+    pub(crate) ldap_user_base_dn: String,
 }
 
 pub(crate) fn ad_hoc_config<'de, T>(sub_figment: &'static str) -> AdHoc

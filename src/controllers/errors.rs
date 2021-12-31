@@ -11,7 +11,7 @@ struct ErrorContext {
 }
 
 #[catch(400)]
-pub fn bad_request() -> Template {
+pub(crate) fn bad_request() -> Template {
     Template::render(
         "error",
         ErrorContext {
@@ -22,7 +22,7 @@ pub fn bad_request() -> Template {
 }
 
 #[catch(404)]
-pub fn not_found(req: &Request) -> Template {
+pub(crate) fn not_found(req: &Request) -> Template {
     Template::render(
         "error",
         ErrorContext {
@@ -33,7 +33,7 @@ pub fn not_found(req: &Request) -> Template {
 }
 
 #[catch(500)]
-pub fn internal_server_error() -> Template {
+pub(crate) fn internal_server_error() -> Template {
     Template::render(
         "error",
         ErrorContext {

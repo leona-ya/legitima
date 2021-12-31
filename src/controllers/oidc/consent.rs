@@ -64,8 +64,8 @@ struct ConsentContext {
     requested_scopes: Vec<Scope>,
 }
 
-#[get("/?<consent_challenge>")]
-pub async fn index(
+#[get("/consent?<consent_challenge>")]
+pub(crate) async fn index(
     ldap_conn: DBLdapConn,
     consent_challenge: &str,
     hydra_config: &State<HydraConfig>,
@@ -120,8 +120,8 @@ pub async fn index(
     )))
 }
 
-#[get("/approve?<consent_challenge>")]
-pub async fn approve(
+#[get("/consent/approve?<consent_challenge>")]
+pub(crate) async fn approve(
     ldap_conn: DBLdapConn,
     consent_challenge: &str,
     hydra_config: &State<HydraConfig>,
@@ -146,8 +146,8 @@ pub async fn approve(
     .await
 }
 
-#[get("/reject?<consent_challenge>")]
-pub async fn reject(
+#[get("/consent/reject?<consent_challenge>")]
+pub(crate) async fn reject(
     consent_challenge: &str,
     hydra_config: &State<HydraConfig>,
 ) -> Result<Redirect, Error> {
