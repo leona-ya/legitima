@@ -37,8 +37,8 @@
                         <br>
                     {% endfor %}
                     <div class="is-flex is-justify-content-space-between">
-                        <a href="/consent/reject?consent_challenge={{ consent_challenge }}" class="button is-danger">Decline</a>
-                        <a href="/consent/approve?consent_challenge={{ consent_challenge }}" class="button is-success">Accept</a>
+                        <a href="/oidc/consent/reject?consent_challenge={{ consent_challenge }}" class="button is-danger">Decline</a>
+                        <a href="/oidc/consent/approve?consent_challenge={{ consent_challenge }}" class="button is-success">Accept</a>
                     </div>
                 </div>
             </div>
