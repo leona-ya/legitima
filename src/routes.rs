@@ -36,6 +36,15 @@ pub(crate) fn build() -> Rocket<Build> {
                 crate::controllers::oidc::consent::reject
             ],
         )
+        .mount(
+            "/selfservice",
+            routes![
+                crate::controllers::selfservice::personal_data::get_personal_data,
+                crate::controllers::selfservice::personal_data::auth_get_personal_data,
+                crate::controllers::selfservice::personal_data::change_name,
+                crate::controllers::selfservice::personal_data::change_email,
+            ],
+        )
         .mount("/static", FileServer::from(static_root_path))
         .attach(Template::fairing())
         .attach(DBLdapConn::fairing())

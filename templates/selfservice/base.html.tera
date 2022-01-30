@@ -1,0 +1,50 @@
+{% extends "base" %}
+
+{% block head %}
+    <style>
+        .main-grid {
+            display: grid;
+            grid-template-columns: 14rem 1fr;
+        }
+
+        #navbar-column {
+            background-color: #e9ecef; padding: 0
+        }
+
+        aside.menu {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 25px;
+        }
+
+        #content-column {
+            padding: 10px 20px;
+        }
+
+        .round-border-card {
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px #CED4DA solid;
+        }
+    </style>
+{% endblock %}
+
+{% block main %}
+    <div class="main-grid">
+        <div id="navbar-column">
+            <aside class="menu">
+                <p class="menu-label">
+                    Your Account
+                </p>
+                <ul class="menu-list">
+                    <li><a>Personal Data</a></li>
+                    <li><a>Security</a></li>
+                </ul>
+            </aside>
+        </div>
+        <div id="content-column">
+            {% block inner_content %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

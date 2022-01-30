@@ -7,6 +7,7 @@ mod auth;
 mod config;
 mod controllers;
 mod error;
+mod ldap;
 mod routes;
 
 #[database("ldap")]

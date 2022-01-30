@@ -1,4 +1,4 @@
-use crate::auth::User;
+use crate::auth::CookieUser;
 use crate::config::AppConfig;
 use crate::error::Error;
 use crate::DBLdapConn;
@@ -10,7 +10,7 @@ use rocket::{Either, State};
 use rocket_dyn_templates::Template;
 
 #[get("/login")]
-pub(crate) fn auth_login(_user: User, cookies: &CookieJar<'_>) -> Result<Redirect, Error> {
+pub(crate) fn auth_login(_user: CookieUser, cookies: &CookieJar<'_>) -> Result<Redirect, Error> {
     let redirect_url = match cookies.get("redirect_url") {
         Some(cookie) => cookie.value().to_owned(),
         None => "/".to_owned(),

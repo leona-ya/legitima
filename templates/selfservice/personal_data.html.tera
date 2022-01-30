@@ -1,0 +1,56 @@
+{% extends "selfservice/base" %}
+
+{% block inner_content %}
+    <h3 class="has-text-weight-light is-size-3">Personal Data</h3>
+    <br>
+    <div class="columns is-desktop">
+        <div class="column">
+            <div class="round-border-card">
+                <h4 class="is-size-4">What should we call you?</h4>
+                <br>
+                <form action="/selfservice/personal_data/name" method="POST">
+                    <h6 class="title is-6">Username</h6>
+                    <div class="control">
+                        <input class="input" type="text" value="{{ username }}" disabled>
+                    </div>
+                    <br>
+                    <h6 class="title is-6">Display name</h6>
+                    <div class="control">
+                        <input name="display_name" class="input" type="text" value="{{ name }}">
+                    </div>
+                    <br>
+                    <h6 class="title is-6">First name</h6>
+                    <div class="control">
+                        <input name="first_name" class="input" type="text" value="{{ first_name }}">
+                    </div>
+                    <br>
+                    <h6 class="title is-6">Last name</h6>
+                    <div class="control">
+                        <input name="last_name" class="input" type="text" value="{{ last_name }}">
+                    </div>
+                    <br>
+                    <button class="button">Change</button>
+                </form>
+            </div>
+        </div>
+        <div class="column">
+            <div class="round-border-card">
+                <h4 class="is-size-4">How can we contact you?</h4>
+                <br>
+                <form action="/selfservice/personal_data/email" method="POST">
+                    <h6 class="title is-6">E-Mail address</h6>
+                    <div class="control">
+                        <input name="email" class="input" type="email" value="{{ email }}">
+                    </div>
+                    <br>
+                    <h6 class="title is-6">E-Mail address (repeat)</h6>
+                    <div class="control">
+                        <input name="email_validation"  class="input" type="email">
+                    </div>
+                    <br>
+                    <button class="button">Change</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
