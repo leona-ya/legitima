@@ -1,7 +1,9 @@
 #[macro_use]
+extern crate rocket;
+#[macro_use]
 extern crate diesel;
 #[macro_use]
-extern crate rocket;
+extern crate diesel_migrations;
 
 use rocket_sync_db_pools::{database, ldap3};
 

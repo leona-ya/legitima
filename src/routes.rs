@@ -1,3 +1,4 @@
+use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
 use rocket::response::Redirect;
 use rocket::{Build, Rocket};
@@ -67,6 +68,10 @@ pub(crate) fn build() -> Rocket<Build> {
         .attach(Template::fairing())
         .attach(DBLdapConn::fairing())
         .attach(DBSQL::fairing())
+        .attach(AdHoc::on_ignite(
+            "Diesel Migrations",
+            crate::db::run_migrations,
+        ))
         .attach(crate::config::ad_hoc_config::<HydraConfig>("hydra"))
         .attach(crate::config::ad_hoc_config::<AppConfig>("app"))
 }

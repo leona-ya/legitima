@@ -16,3 +16,4 @@ rocket_sync_db_pools = { git = "https://github.com/em0lar/rocket_sync_db_pools_l
 chrono = { version = "0.4.19", default-features = false, features = ["std", "clock"] }
 thiserror = "1.0"
 diesel = { version = "1.4.8", features = ["postgres"] }
+diesel_migrations = "1.4.0"

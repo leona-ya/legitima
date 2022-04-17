@@ -1,3 +1,5 @@
+use crate::DBSQL;
+use rocket::{Build, Rocket};
 use rocket_sync_db_pools::diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
@@ -42,4 +44,15 @@ pub(crate) struct DBGroup {
     pub id: i32,
     pub name: String,
     pub ldap_dn: String,
+}
+
+pub(crate) async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
+    embed_migrations!("migrations");
+
+    let conn = DBSQL::get_one(&rocket).await.expect("database connection");
+    conn.run(|c| embedded_migrations::run(c))
+        .await
+        .expect("diesel migrations");
+
+    rocket
 }
