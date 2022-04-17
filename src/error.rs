@@ -12,6 +12,8 @@ pub(crate) enum Error {
     Ldap(#[from] ldap3::LdapError),
     #[error("Hydra error, http status {status}")]
     Hydra { status: Status },
+    #[error("SQL DB error")]
+    DbSql(#[from] diesel::result::Error),
 }
 
 impl<T> From<HydraError<T>> for Error {
@@ -41,6 +43,7 @@ impl<'r> Responder<'r, 'static> for Error {
             Error::Http(s) => s.respond_to(req),
             Error::Ldap(_) => Err(Status::InternalServerError),
             Error::Hydra { status } => Err(status),
+            Error::DbSql(_) => Err(Status::InternalServerError),
         }
     }
 }

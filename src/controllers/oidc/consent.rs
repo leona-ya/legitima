@@ -72,7 +72,7 @@ pub(crate) async fn index(
     app_config: &State<AppConfig>,
 ) -> Result<Either<Template, Redirect>, Error> {
     let app_config = app_config.inner();
-    let hydra_configuration: &Configuration = &hydra_config.inner().into_hydra_configuration();
+    let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
     let consent_request = ory_hydra_client::apis::admin_api::get_consent_request(
         hydra_configuration,
         consent_challenge,
@@ -82,7 +82,7 @@ pub(crate) async fn index(
     if let Some(skip) = consent_request.skip {
         if skip {
             return match accept_consent_request(
-                ldap_conn,
+                &ldap_conn,
                 hydra_config.inner(),
                 hydra_configuration,
                 consent_challenge,
@@ -101,8 +101,7 @@ pub(crate) async fn index(
         .requested_scope
         .unwrap()
         .iter()
-        .map(|scope| get_scopes().get(scope as &str).cloned())
-        .flatten()
+        .filter_map(|scope| get_scopes().get(scope as &str).cloned())
         .collect();
 
     let client = consent_request.client.unwrap();
@@ -127,7 +126,7 @@ pub(crate) async fn approve(
     hydra_config: &State<HydraConfig>,
     app_config: &State<AppConfig>,
 ) -> Result<Redirect, Error> {
-    let hydra_configuration: &Configuration = &hydra_config.inner().into_hydra_configuration();
+    let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
     let app_config = app_config.inner();
     let consent_request = ory_hydra_client::apis::admin_api::get_consent_request(
         hydra_configuration,
@@ -136,7 +135,7 @@ pub(crate) async fn approve(
     .await?;
 
     accept_consent_request(
-        ldap_conn,
+        &ldap_conn,
         hydra_config.inner(),
         hydra_configuration,
         consent_challenge,
@@ -151,7 +150,7 @@ pub(crate) async fn reject(
     consent_challenge: &str,
     hydra_config: &State<HydraConfig>,
 ) -> Result<Redirect, Error> {
-    let hydra_configuration: &Configuration = &hydra_config.inner().into_hydra_configuration();
+    let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
     let reject_consent_request = ory_hydra_client::apis::admin_api::reject_consent_request(
         hydra_configuration,
         consent_challenge,
@@ -167,7 +166,7 @@ pub(crate) async fn reject(
     Ok(Redirect::to(reject_consent_request.redirect_to))
 }
 async fn accept_consent_request(
-    ldap_conn: DBLdapConn,
+    ldap_conn: &DBLdapConn,
     hydra_config: &HydraConfig,
     hydra_configuration: &Configuration,
     consent_challenge: &str,
@@ -190,13 +189,12 @@ async fn accept_consent_request(
         })
         .await?
         .success()?;
-    let ldap_user_data: ldap3::SearchEntry;
 
-    if let Some(ldap_search_user) = ldap_search_rs.into_iter().next() {
-        ldap_user_data = ldap3::SearchEntry::construct(ldap_search_user);
+    let ldap_user_data = if let Some(ldap_search_user) = ldap_search_rs.into_iter().next() {
+        ldap3::SearchEntry::construct(ldap_search_user)
     } else {
         return Err(Error::Http(Status::BadRequest));
-    }
+    };
 
     let accept_consent_request = ory_hydra_client::apis::admin_api::accept_consent_request(
         hydra_configuration,

@@ -8,7 +8,8 @@
         }
 
         #navbar-column {
-            background-color: #e9ecef; padding: 0
+            background-color: #e9ecef;
+            padding: 0
         }
 
         aside.menu {
@@ -38,7 +39,14 @@
                     Your Account
                 </p>
                 <ul class="menu-list">
-                    <li><a>Personal Data</a></li>
+                    <li><a href="/selfservice/personal_data">Personal Data</a></li>
+                    <li><a>Security</a></li>
+                </ul>
+                <p class="menu-label">
+                    Administration
+                </p>
+                <ul class="menu-list">
+                    <li><a href="/admin/groups">Groups</a></li>
                     <li><a>Security</a></li>
                 </ul>
             </aside>

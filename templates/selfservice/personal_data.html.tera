@@ -1,4 +1,4 @@
-{% extends "selfservice/base" %}
+{% extends "base-sidebar" %}
 
 {% block inner_content %}
     <h3 class="has-text-weight-light is-size-3">Personal Data</h3>
@@ -28,7 +28,6 @@
                     <div class="control">
                         <input name="last_name" class="input" type="text" value="{{ last_name }}">
                     </div>
-                    <br>
                     <button class="button">Change</button>
                 </form>
             </div>
@@ -47,7 +46,6 @@
                     <div class="control">
                         <input name="email_validation"  class="input" type="email">
                     </div>
-                    <br>
                     <button class="button">Change</button>
                 </form>
             </div>

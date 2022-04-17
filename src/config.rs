@@ -10,7 +10,7 @@ pub(crate) struct HydraConfig {
 }
 
 impl HydraConfig {
-    pub(crate) fn into_hydra_configuration(&self) -> Configuration {
+    pub(crate) fn as_hydra_configuration(&self) -> Configuration {
         Configuration {
             base_path: self.admin_endpoint_url.clone(),
             ..Default::default()
@@ -22,6 +22,8 @@ impl HydraConfig {
 pub(crate) struct AppConfig {
     pub(crate) name: String,
     pub(crate) ldap_user_base_dn: String,
+    pub(crate) ldap_groups_base_dn: String,
+    pub(crate) ldap_admin_group_dn: String,
 }
 
 pub(crate) fn ad_hoc_config<'de, T>(sub_figment: &'static str) -> AdHoc

@@ -21,6 +21,18 @@ pub(crate) fn bad_request() -> Template {
     )
 }
 
+#[catch(403)]
+pub(crate) fn forbidden() -> Template {
+    Template::render(
+        "error",
+        ErrorContext {
+            error_title: "403 - Forbidden".to_owned(),
+            error_message: "Oh no! You don't have the required permissions to access this page"
+                .to_owned(),
+        },
+    )
+}
+
 #[catch(404)]
 pub(crate) fn not_found(req: &Request) -> Template {
     Template::render(

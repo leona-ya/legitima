@@ -1,8 +1,15 @@
-use crate::config::{AppConfig, HydraConfig};
-use crate::DBLdapConn;
 use rocket::fs::FileServer;
+use rocket::response::Redirect;
 use rocket::{Build, Rocket};
 use rocket_dyn_templates::Template;
+
+use crate::config::{AppConfig, HydraConfig};
+use crate::{DBLdapConn, DBSQL};
+
+#[get("/")]
+fn base_redirect() -> Redirect {
+    Redirect::to("/selfservice/personal_data")
+}
 
 pub(crate) fn build() -> Rocket<Build> {
     let static_root_path = match option_env!("LEGITIMA_STATIC_ROOT_PATH") {
@@ -14,10 +21,12 @@ pub(crate) fn build() -> Rocket<Build> {
             "/",
             catchers![
                 crate::controllers::errors::bad_request,
+                crate::controllers::errors::forbidden,
                 crate::controllers::errors::not_found,
                 crate::controllers::errors::internal_server_error
             ],
         )
+        .mount("/", routes![base_redirect])
         .mount(
             "/auth",
             routes![
@@ -45,9 +54,19 @@ pub(crate) fn build() -> Rocket<Build> {
                 crate::controllers::selfservice::personal_data::change_email,
             ],
         )
+        .mount(
+            "/admin",
+            routes![
+                crate::controllers::admin::groups::list_groups,
+                crate::controllers::admin::groups::auth_list_groups,
+                crate::controllers::admin::groups::auth_edit_group,
+                crate::controllers::admin::groups::auth_edit_group_memberform,
+            ],
+        )
         .mount("/static", FileServer::from(static_root_path))
         .attach(Template::fairing())
         .attach(DBLdapConn::fairing())
+        .attach(DBSQL::fairing())
         .attach(crate::config::ad_hoc_config::<HydraConfig>("hydra"))
         .attach(crate::config::ad_hoc_config::<AppConfig>("app"))
 }

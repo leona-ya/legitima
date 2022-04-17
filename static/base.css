@@ -33,3 +33,11 @@ body {
 .card h4 {
     margin-bottom: 1em !important;
 }
+
+.round-border-card .content {
+    margin-bottom: 0;
+}
+
+.round-border-card .button {
+    margin-top: 1rem;
+}

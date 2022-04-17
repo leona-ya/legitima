@@ -1,0 +1,43 @@
+{% extends "base-sidebar" %}
+
+{% block inner_content %}
+    <h3 class="has-text-weight-light is-size-3">Groups - Edit</h3>
+    <br>
+    <div class="columns is-desktop">
+        <div class="column">
+            <div class="round-border-card">
+                <h4 class="is-size-4">General data</h4>
+                <br>
+                <form action="/admin/groups/{{ id }}/general" method="POST">
+                    <h6 class="title is-6">LDAP DN</h6>
+                    <div class="control">
+                        <input class="input" type="text" value="{{ ldap_dn }}" disabled>
+                    </div>
+                    <br>
+                    <h6 class="title is-6">Name</h6>
+                    <div class="control">
+                        <input class="input" type="text" value="{{ name }}">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="column">
+            <div class="round-border-card">
+                <h4 class="is-size-4">Members</h4>
+                <br>
+                <form action="/admin/groups/{{ id }}/members" method="POST">
+                    <fieldset>
+                        {% for user in user_member_mapping %}
+                            <label class="checkbox" style="margin-bottom: 10px;">
+                                <input type="checkbox" name="members" value="{{ user.0 }}" {% if user.1 %}checked{% endif %}>
+                                {{ user.0 }}
+                            </label>
+                            <br>
+                        {% endfor %}
+                        <button class="button">Submit</button>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

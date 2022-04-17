@@ -1,0 +1,37 @@
+{% extends "base-sidebar" %}
+
+{% block inner_content %}
+    <h3 class="has-text-weight-light is-size-3">Groups</h3>
+    <br>
+    <div class="columns is-desktop">
+        {% for group in groups %}
+            <div class="column">
+                <div class="round-border-card">
+                    <h4 class="is-size-4">{{ group.name }}</h4>
+                    <div class="content">
+                        <p>
+                            LDAP DN: {{ group.ldap_dn }}<br/>
+                            Members:
+                        </p>
+                        <ul>
+                            {% for member in group.members %}
+                                <li>{{ member }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <a href="/admin/groups/{{ group.id }}" class="button">Edit</a>
+                </div>
+            </div>
+            {% if loop.index % 2 == 0 %}
+                </div>
+                <div class="columns is-desktop">
+            {% endif %}
+        {% endfor %}
+        <div class="column">
+            <div class="round-border-card">
+                <h4 class="is-size-4">Add Group</h4>
+                <button class="button">Add</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
