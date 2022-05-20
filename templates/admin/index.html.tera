@@ -1,5 +1,0 @@
-{% extends "base-sidebar" %}
-{% block content %}
-    <h3 class="has-text-weight-light is-size-3">Personal</h3>
-    <h4 class="has-text-weight-bold is-size-4">Login</h4>
-{% endblock %}

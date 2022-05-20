@@ -29,8 +29,9 @@
         {% endfor %}
         <div class="column">
             <div class="round-border-card">
-                <h4 class="is-size-4">Add Group</h4>
-                <button class="button">Add</button>
+                <h4 class="is-size-4">Add group</h4>
+                <a class="button" href="/admin/groups/add_legitima">Add group to legitima</a>
+                <a class="button" href="/admin/groups/add_ldap_legitima">Add group to LDAP and legitima</a>
             </div>
         </div>
     </div>

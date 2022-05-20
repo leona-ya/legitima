@@ -62,6 +62,10 @@ pub(crate) fn build() -> Rocket<Build> {
                 crate::controllers::admin::groups::auth_list_groups,
                 crate::controllers::admin::groups::auth_edit_group,
                 crate::controllers::admin::groups::auth_edit_group_memberform,
+                crate::controllers::admin::groups::auth_add_ldap_legitima,
+                crate::controllers::admin::groups::auth_add_ldap_legitima_form,
+                crate::controllers::admin::groups::auth_add_legitima,
+                crate::controllers::admin::groups::auth_add_legitima_form,
             ],
         )
         .mount("/static", FileServer::from(static_root_path))

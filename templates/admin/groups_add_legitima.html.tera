@@ -1,0 +1,29 @@
+{% extends "base-sidebar" %}
+
+{% block inner_content %}
+    <h3 class="has-text-weight-light is-size-3">Groups - Add to legitima</h3>
+    <br>
+    <div class="columns is-desktop">
+        <div class="column">
+            <form method="POST">
+                <h6 class="title is-6">LDAP Group DN</h6>
+                <div class="select">
+                    <select name="ldap_dn">
+                        <option disabled selected>Select</option>
+                        {% for option in ldap_dn_options %}
+                        <option>{{ option }}</option>
+                        {% endfor  %}
+                    </select>
+                </div>
+                <br>
+                <br>
+                <h6 class="title is-6">legitima name</h6>
+                <div class="control">
+                    <input required class="input" type="text" name="legitima_name">
+                </div>
+                <br>
+                <button class="button">Submit</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

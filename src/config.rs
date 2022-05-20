@@ -24,6 +24,7 @@ pub(crate) struct AppConfig {
     pub(crate) ldap_user_base_dn: String,
     pub(crate) ldap_groups_base_dn: String,
     pub(crate) ldap_admin_group_dn: String,
+    pub(crate) ldap_root_dn: String,
 }
 
 pub(crate) fn ad_hoc_config<'de, T>(sub_figment: &'static str) -> AdHoc

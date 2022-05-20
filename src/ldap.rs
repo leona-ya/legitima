@@ -32,6 +32,14 @@ pub(crate) async fn change_attrs<S: 'static + AsRef<[u8]> + Eq + Hash + Send>(
         .success()
 }
 
+pub(crate) async fn add_dn<S: 'static + AsRef<[u8]> + Eq + Hash + Send>(
+    ldap_conn: &DBLdapConn,
+    dn: String,
+    attrs: Vec<(S, HashSet<S>)>,
+) -> Result<ldap3::LdapResult, ldap3::LdapError> {
+    ldap_conn.run(move |c| c.add(&dn, attrs)).await?.success()
+}
+
 pub(crate) async fn get_all_users(
     app_config: &AppConfig,
     ldap_conn: &DBLdapConn,

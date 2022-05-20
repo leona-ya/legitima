@@ -1,0 +1,23 @@
+{% extends "base-sidebar" %}
+
+{% block inner_content %}
+    <h3 class="has-text-weight-light is-size-3">Groups - Add to LDAP and legitima</h3>
+    <br>
+    <div class="columns is-desktop">
+        <div class="column">
+            <form action="/admin/groups/add_ldap_legitima" method="POST">
+                <h6 class="title is-6">LDAP CN</h6>
+                <div class="control">
+                    <input class="input" type="text" name="ldap_cn">
+                </div>
+                <br>
+                <h6 class="title is-6">legitima name</h6>
+                <div class="control">
+                    <input class="input" type="text" name="legitima_name">
+                </div>
+                <br>
+                <button class="button">Submit</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

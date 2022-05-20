@@ -38,10 +38,16 @@ pub(crate) struct DBOAuthClient {
     pub login_allowed: bool,
 }
 
-#[derive(Debug, Clone, Insertable, Queryable, Serialize, Deserialize)]
-#[table_name = "group"]
+#[derive(Debug, Clone, Queryable, Serialize, Deserialize)]
 pub(crate) struct DBGroup {
     pub id: i32,
+    pub name: String,
+    pub ldap_dn: String,
+}
+
+#[derive(Debug, Clone, Insertable, Serialize, Deserialize)]
+#[table_name = "group"]
+pub(crate) struct DBInsertGroup {
     pub name: String,
     pub ldap_dn: String,
 }
