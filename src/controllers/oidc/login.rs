@@ -35,6 +35,7 @@ pub(crate) async fn auth_index(
         login_challenge,
         Some(AcceptLoginRequest {
             acr: None,
+            amr: None,
             context: None,
             force_subject_identifier: None,
             remember: None,
