@@ -12,8 +12,11 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.71"
 ory-hydra-client = "1.11.8"
 ldap3 = "0.9.3"
-rocket_sync_db_pools = { git = "https://github.com/em0lar/rocket_sync_db_pools_ldap", features = [ "ldap_pool", "diesel_postgres_pool" ] }
+rocket_sync_db_pools = { git = "https://github.com/leona-ya/rocket_sync_db_pools_ldap", features = [ "ldap_pool" ] }
 chrono = { version = "0.4.19", default-features = false, features = ["std", "clock"] }
 thiserror = "1.0"
-diesel = { version = "1.4.8", features = ["postgres"] }
-diesel_migrations = "1.4.0"
+#webauthn-rs = "0.3.2"
+#url = "2.2.2"
+#uuid = { version = "1.1.2", features = ["serde"] }
+rocket_db_pools = { version = "0.1.0-rc.2", features = ["sqlx_postgres"] }
+sqlx = "0.5.13"

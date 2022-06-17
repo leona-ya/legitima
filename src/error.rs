@@ -13,7 +13,9 @@ pub(crate) enum Error {
     #[error("Hydra error, http status {status}")]
     Hydra { status: Status },
     #[error("SQL DB error")]
-    DbSql(#[from] diesel::result::Error),
+    DB(#[from] sqlx::Error),
+    #[error("Serde json error")]
+    SerdeJSON(#[from] serde_json::Error),
 }
 
 impl<T> From<HydraError<T>> for Error {
@@ -41,9 +43,8 @@ impl<'r> Responder<'r, 'static> for Error {
     fn respond_to(self, req: &'r Request<'_>) -> rocket::response::Result<'static> {
         match self {
             Error::Http(s) => s.respond_to(req),
-            Error::Ldap(_) => Err(Status::InternalServerError),
             Error::Hydra { status } => Err(status),
-            Error::DbSql(_) => Err(Status::InternalServerError),
+            Error::Ldap(_) | Error::DB(_) | Error::SerdeJSON(_) => Err(Status::InternalServerError),
         }
     }
 }

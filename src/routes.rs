@@ -2,10 +2,12 @@ use rocket::fairing::AdHoc;
 use rocket::fs::FileServer;
 use rocket::response::Redirect;
 use rocket::{Build, Rocket};
+use rocket_db_pools::Database;
 use rocket_dyn_templates::Template;
 
-use crate::config::{AppConfig, HydraConfig};
-use crate::{DBLdapConn, DBSQL};
+use crate::config::{AppConfig, HydraConfig, WebauthnStaticConfig};
+use crate::db::DB;
+use crate::{db, DBLdapConn};
 
 #[get("/")]
 fn base_redirect() -> Redirect {
@@ -71,11 +73,8 @@ pub(crate) fn build() -> Rocket<Build> {
         .mount("/static", FileServer::from(static_root_path))
         .attach(Template::fairing())
         .attach(DBLdapConn::fairing())
-        .attach(DBSQL::fairing())
-        .attach(AdHoc::on_ignite(
-            "Diesel Migrations",
-            crate::db::run_migrations,
-        ))
+        .attach(DB::init())
+        .attach(AdHoc::try_on_ignite("SQLx Migrations", db::run_migrations))
         .attach(crate::config::ad_hoc_config::<HydraConfig>("hydra"))
         .attach(crate::config::ad_hoc_config::<AppConfig>("app"))
 }
