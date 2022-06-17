@@ -5,7 +5,7 @@ use rocket::{Build, Rocket};
 use rocket_db_pools::Database;
 use rocket_dyn_templates::Template;
 
-use crate::config::{AppConfig, HydraConfig, WebauthnStaticConfig};
+use crate::config::{AppConfig, HydraConfig};
 use crate::db::DB;
 use crate::{db, DBLdapConn};
 

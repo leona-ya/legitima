@@ -1,0 +1,106 @@
+{
+  "db": "PostgreSQL",
+  "345a5926409e5c51e25275441e9de52af07a895f9f47caa81d21b12b4a611b5e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "ldap_dn",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id as \"id?\", name, ldap_dn FROM \"group\""
+  },
+  "70085f9abf27b9b4d91644e0bd028b6e8ce8a9716f549e4153f2d9bb6f3ed8a0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "ldap_dn",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT ldap_dn FROM \"group\" WHERE id = $1"
+  },
+  "8246b2616b595f38c763d12b17260a830d8874bf2597d95e2a8807980376e2fa": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "ldap_dn",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT id as \"id?\", name, ldap_dn FROM \"group\" WHERE id = $1"
+  },
+  "bf6069e5d2617f0cf3ba8d656d8a986169055b66ee37616d3e4fe45e04ee64b9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "INSERT INTO \"group\" (name, ldap_dn) VALUES ($1, $2) RETURNING id"
+  }
+}

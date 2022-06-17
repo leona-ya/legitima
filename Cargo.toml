@@ -19,4 +19,4 @@ thiserror = "1.0"
 #url = "2.2.2"
 #uuid = { version = "1.1.2", features = ["serde"] }
 rocket_db_pools = { version = "0.1.0-rc.2", features = ["sqlx_postgres"] }
-sqlx = "0.5.13"
+sqlx = { version = "0.5.13", features = ["offline"] }
