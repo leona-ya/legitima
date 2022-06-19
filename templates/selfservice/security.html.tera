@@ -1,0 +1,37 @@
+{% extends "base-sidebar" %}
+
+{% block inner_content %}
+    <h3 class="has-text-weight-light is-size-3">Security</h3>
+    <br>
+    <div class="columns is-desktop">
+        <div class="column">
+            <div class="round-border-card">
+                <h4 class="is-size-4">Two-Factor Authentication (2FA)</h4>
+                <br>
+                <h5 class="is-size-5">WebAuthn</h5>
+                <br>
+                <table class="table is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for credential in webauthn_credentials %}
+                        <tr>
+                            <td>{{ credential.1 }}</td>
+                            <td><a class="button is-small is-marginless" href="/selfservice/security/credential/{{ credential.0 }}/delete">Delete</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <a onclick="webAuthnRegister()" class="button">Setup</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block main_extra %}
+    <script src="/static/js/pages/selfservice/security_webauthn_setup.js"></script>
+{% endblock %}

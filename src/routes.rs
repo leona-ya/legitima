@@ -5,7 +5,7 @@ use rocket::{Build, Rocket};
 use rocket_db_pools::Database;
 use rocket_dyn_templates::Template;
 
-use crate::config::{AppConfig, HydraConfig};
+use crate::config::{AppConfig, HydraConfig, WebauthnStaticConfig};
 use crate::db::DB;
 use crate::{db, DBLdapConn};
 
@@ -55,6 +55,11 @@ pub(crate) fn build() -> Rocket<Build> {
                 crate::controllers::selfservice::personal_data::auth_get_personal_data,
                 crate::controllers::selfservice::personal_data::change_name,
                 crate::controllers::selfservice::personal_data::change_email,
+                crate::controllers::selfservice::security::get_security,
+                crate::controllers::selfservice::security::auth_get_security,
+                crate::controllers::selfservice::security::auth_credential_delete,
+                crate::controllers::selfservice::security::auth_webauthn_challenge_register,
+                crate::controllers::selfservice::security::auth_webauthn_register,
             ],
         )
         .mount(
@@ -77,4 +82,7 @@ pub(crate) fn build() -> Rocket<Build> {
         .attach(AdHoc::try_on_ignite("SQLx Migrations", db::run_migrations))
         .attach(crate::config::ad_hoc_config::<HydraConfig>("hydra"))
         .attach(crate::config::ad_hoc_config::<AppConfig>("app"))
+        .attach(crate::config::ad_hoc_config::<WebauthnStaticConfig>(
+            "webauthn",
+        ))
 }

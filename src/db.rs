@@ -2,7 +2,10 @@ use rocket::{fairing, Build, Rocket};
 use rocket_db_pools::Database;
 use serde::{Deserialize, Serialize};
 use sqlx::pool::PoolConnection;
+use sqlx::types::Json;
 use sqlx::Postgres;
+use webauthn_rs::proto::Credential;
+use webauthn_rs::RegistrationState;
 
 type Result<T, E = sqlx::Error> = std::result::Result<T, E>;
 
@@ -16,7 +19,7 @@ pub(crate) struct DBOAuthClient {
     pub login_allowed: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct DBGroup {
     #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
     pub id: Option<i32>,
@@ -67,6 +70,119 @@ impl DBGroup {
         .await?;
 
         Ok(rec.id)
+    }
+}
+
+pub(crate) trait DBUserCredentialData {}
+impl DBUserCredentialData for RegistrationState {}
+impl DBUserCredentialData for Credential {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub(crate) struct DBUserCredential<D: DBUserCredentialData> {
+    #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
+    pub id: Option<uuid::Uuid>,
+    pub username: String,
+    pub label: Option<String>,
+    pub credential_type: DBUserCredentialTypes,
+    pub credential_data: Json<D>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(type_name = "user_credential_types")]
+#[sqlx(rename_all = "snake_case")]
+pub(crate) enum DBUserCredentialTypes {
+    WebauthnRegistration,
+    WebauthnCredential,
+}
+
+impl DBUserCredential<RegistrationState> {
+    pub async fn find_webauthn_registration_by_id_and_username(
+        id: uuid::Uuid,
+        username: &str,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<DBUserCredential<RegistrationState>> {
+        let webauthn_registrations = sqlx::query_as!(
+            DBUserCredential,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<RegistrationState>" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"#,
+            id,
+            username,
+            DBUserCredentialTypes::WebauthnRegistration as _
+        )
+            .fetch_one(connection)
+            .await?;
+
+        Ok(webauthn_registrations)
+    }
+}
+
+impl DBUserCredential<Credential> {
+    pub async fn find_webauthn_credentials_by_username(
+        username: &str,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<Vec<DBUserCredential<Credential>>> {
+        let webauthn_credentials = sqlx::query_as!(
+            DBUserCredential,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<Credential>" FROM user_credential WHERE username = $1 AND credential_type = $2"#,
+            username,
+            DBUserCredentialTypes::WebauthnCredential as _
+        )
+            .fetch_all(connection)
+            .await?;
+
+        Ok(webauthn_credentials)
+    }
+}
+
+impl<D: DBUserCredentialData + Serialize + Sync> DBUserCredential<D> {
+    pub async fn create_one(
+        user_credential: DBUserCredential<D>,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<uuid::Uuid> {
+        let rec = sqlx::query!(
+            "INSERT INTO user_credential (username, label, credential_type, credential_data) VALUES ($1, $2, $3, $4) RETURNING id",
+            user_credential.username,
+            user_credential.label,
+            user_credential.credential_type as _,
+            user_credential.credential_data as _
+        )
+        .fetch_one(connection)
+        .await?;
+
+        Ok(rec.id)
+    }
+    pub async fn update_type_data(
+        id: uuid::Uuid,
+        credential_type: DBUserCredentialTypes,
+        credential_data: Json<D>,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<bool> {
+        let rows_affected = sqlx::query!(
+            "UPDATE user_credential SET credential_type = $1, credential_data = $2 WHERE id = $3",
+            credential_type as _,
+            credential_data as _,
+            id
+        )
+        .execute(connection)
+        .await?
+        .rows_affected();
+
+        Ok(rows_affected > 0)
+    }
+    pub async fn delete_credential(
+        id: uuid::Uuid,
+        username: &str,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<bool> {
+        let rows_affected = sqlx::query!(
+            "DELETE FROM user_credential WHERE id = $1 AND username = $2",
+            id,
+            username
+        )
+        .execute(connection)
+        .await?
+        .rows_affected();
+
+        Ok(rows_affected == 1)
     }
 }
 

@@ -44,7 +44,12 @@ impl<'r> Responder<'r, 'static> for Error {
         match self {
             Error::Http(s) => s.respond_to(req),
             Error::Hydra { status } => Err(status),
-            Error::Ldap(_) | Error::DB(_) | Error::SerdeJSON(_) => Err(Status::InternalServerError),
+            Error::Ldap(_) => Err(Status::InternalServerError),
+            Error::SerdeJSON(_) => Err(Status::InternalServerError),
+            Error::DB(err) => {
+                dbg!(err);
+                Err(Status::InternalServerError)
+            }
         }
     }
 }

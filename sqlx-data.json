@@ -1,5 +1,51 @@
 {
   "db": "PostgreSQL",
+  "05eeff680544848094f6a77517409891060918a0f400ede09cb52f97c6fd62f2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          },
+          "Jsonb"
+        ]
+      }
+    },
+    "query": "INSERT INTO user_credential (username, label, credential_type, credential_data) VALUES ($1, $2, $3, $4) RETURNING id"
+  },
+  "25a262f274c68e60e811ac123ec165ceb1c9a48a4a28a997dce8a841453d6b37": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "DELETE FROM user_credential WHERE id = $1 AND username = $2"
+  },
   "345a5926409e5c51e25275441e9de52af07a895f9f47caa81d21b12b4a611b5e": {
     "describe": {
       "columns": [
@@ -49,6 +95,96 @@
       }
     },
     "query": "SELECT ldap_dn FROM \"group\" WHERE id = $1"
+  },
+  "7c439009473d1d927c0b627637813a76c9bd2adc29dc844405870dcd450b4f67": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "label",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "credential_type: DBUserCredentialTypes",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        },
+        {
+          "name": "credential_data!: Json<RegistrationState>",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        ]
+      }
+    },
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<RegistrationState>\" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"
+  },
+  "7cecd92a856ac6cd54b8d7eefb0d1058b34aae3b9acfa1f9c920cf92043a89c7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          },
+          "Jsonb",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "UPDATE user_credential SET credential_type = $1, credential_data = $2 WHERE id = $3"
   },
   "8246b2616b595f38c763d12b17260a830d8874bf2597d95e2a8807980376e2fa": {
     "describe": {
@@ -102,5 +238,70 @@
       }
     },
     "query": "INSERT INTO \"group\" (name, ldap_dn) VALUES ($1, $2) RETURNING id"
+  },
+  "c89a43a9013480b25443c5aed7aa962adcdc14fb862ef128196e770cf9d05fee": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "label",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "credential_type: DBUserCredentialTypes",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        },
+        {
+          "name": "credential_data!: Json<Credential>",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        ]
+      }
+    },
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<Credential>\" FROM user_credential WHERE username = $1 AND credential_type = $2"
   }
 }

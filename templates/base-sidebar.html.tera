@@ -40,7 +40,7 @@
                 </p>
                 <ul class="menu-list">
                     <li><a href="/selfservice/personal_data">Personal Data</a></li>
-                    <li><a>Security</a></li>
+                    <li><a href="/selfservice/security">Security</a></li>
                 </ul>
                 <p class="menu-label">
                     Administration
@@ -55,4 +55,5 @@
             {% block inner_content %}{% endblock %}
         </div>
     </div>
+    {% block main_extra %}{% endblock %}
 {% endblock %}
