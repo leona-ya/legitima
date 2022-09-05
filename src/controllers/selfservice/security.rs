@@ -1,7 +1,7 @@
-use crate::auth::CookieUser;
 use crate::config::WebauthnStaticConfig;
 use crate::db::{DBUserCredential, DBUserCredentialTypes, DB};
 use crate::error::Error;
+use crate::sessions::User;
 use rocket::http::{Cookie, CookieJar, Status};
 use rocket::response::Redirect;
 use rocket::serde::json::Json;
@@ -30,7 +30,7 @@ struct SecurityHomeContext {
 
 #[get("/security")]
 pub(crate) async fn auth_get_security(
-    cookie_user: CookieUser,
+    cookie_user: User,
     mut db: Connection<DB>,
 ) -> Result<Template, Error> {
     let username = cookie_user.get_username();
@@ -54,7 +54,7 @@ pub(crate) async fn auth_get_security(
 
 #[get("/security/credential/<credential_id>/delete")]
 pub(crate) async fn auth_credential_delete(
-    cookie_user: CookieUser,
+    cookie_user: User,
     credential_id: uuid::Uuid,
     mut db: Connection<DB>,
 ) -> Result<Redirect, Error> {
@@ -87,7 +87,7 @@ pub(crate) struct WebAuthnChallengeRegisterResponse {
 )]
 pub(crate) async fn auth_webauthn_challenge_register(
     body: Json<WebAuthnChallengeRegisterBody>,
-    cookie_user: CookieUser,
+    cookie_user: User,
     webauthn_static_config: &State<WebauthnStaticConfig>,
     mut db: Connection<DB>,
 ) -> Result<Json<WebAuthnChallengeRegisterResponse>, Error> {
@@ -123,7 +123,7 @@ pub(crate) async fn auth_webauthn_challenge_register(
     data = "<reg>"
 )]
 pub(crate) async fn auth_webauthn_register(
-    cookie_user: CookieUser,
+    cookie_user: User,
     credential_id: uuid::Uuid,
     reg: Json<RegisterPublicKeyCredential>,
     webauthn_static_config: &State<WebauthnStaticConfig>,

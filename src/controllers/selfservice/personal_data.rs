@@ -8,10 +8,10 @@ use rocket::serde::Serialize;
 use rocket::State;
 use rocket_dyn_templates::Template;
 
-use crate::auth::CookieUser;
 use crate::config::AppConfig;
 use crate::error::Error;
 use crate::ldap::{change_attrs, format_user_dn, get_ldap_user};
+use crate::sessions::User;
 use crate::DBLdapConn;
 
 #[derive(Serialize)]
@@ -36,7 +36,7 @@ pub(crate) async fn get_personal_data(cookies: &CookieJar<'_>) -> Redirect {
 pub(crate) async fn auth_get_personal_data(
     app_config: &State<AppConfig>,
     ldap_conn: DBLdapConn,
-    cookie_user: CookieUser,
+    cookie_user: User,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
     let ldap_user = get_ldap_user(app_config, &ldap_conn, &cookie_user.get_username()[..]).await?;
@@ -67,7 +67,7 @@ pub(crate) async fn change_name<'r>(
     app_config: &State<AppConfig>,
     ldap_conn: DBLdapConn,
     form: Form<PersonalDataName<'r>>,
-    cookie_user: CookieUser,
+    cookie_user: User,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
     let form = form.into_inner();
@@ -108,7 +108,7 @@ pub(crate) async fn change_email<'r>(
     app_config: &State<AppConfig>,
     ldap_conn: DBLdapConn,
     form: Form<PersonalDataEmail<'r>>,
-    cookie_user: CookieUser,
+    cookie_user: User,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
     let form = form.into_inner();

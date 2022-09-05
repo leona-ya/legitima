@@ -1,7 +1,7 @@
 use ldap3::Mod;
 use rocket::form::validate::Contains;
 use rocket::form::{Contextual, Form};
-use rocket::http::{Cookie, CookieJar, Status};
+use rocket::http::{Cookie, CookieJar};
 use rocket::response::Redirect;
 use rocket::serde::Serialize;
 use rocket::{Either, State};
@@ -9,11 +9,11 @@ use rocket_db_pools::Connection;
 use rocket_dyn_templates::Template;
 use std::collections::{HashMap, HashSet};
 
-use crate::auth::CookieUser;
 use crate::config::AppConfig;
 use crate::db::{DBGroup, DB};
 use crate::error::Error;
 use crate::ldap::{add_dn, change_attrs, get_all_groups, get_all_users, get_group_members};
+use crate::sessions::AdminUser;
 use crate::DBLdapConn;
 
 #[derive(Serialize)]
@@ -41,15 +41,12 @@ pub(crate) async fn list_groups(cookies: &CookieJar<'_>) -> Redirect {
 
 #[get("/groups")]
 pub(crate) async fn auth_list_groups(
-    user: CookieUser,
+    _user: AdminUser,
     app_config: &State<AppConfig>,
     ldap_conn: DBLdapConn,
     mut db: Connection<DB>,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
-    if !user.is_admin(app_config, &ldap_conn).await? {
-        return Err(Error::Http(Status::Forbidden));
-    }
     let groups = DBGroup::list_all(&mut *db).await?;
     let ldap_groups = get_all_groups(app_config, &ldap_conn).await?;
 
@@ -77,16 +74,13 @@ pub(crate) async fn auth_list_groups(
 
 #[get("/groups/<group_id>")]
 pub(crate) async fn auth_edit_group(
-    user: CookieUser,
+    _user: AdminUser,
     group_id: i32,
     app_config: &State<AppConfig>,
     ldap_conn: DBLdapConn,
     mut db: Connection<DB>,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
-    if !user.is_admin(app_config, &ldap_conn).await? {
-        return Err(Error::Http(Status::Forbidden));
-    }
     let db_group = DBGroup::find_by_id(group_id, &mut *db).await?;
     let ldap_group_members = get_group_members(&ldap_conn, db_group.ldap_dn.clone()).await?;
     let ldap_all_users = get_all_users(app_config, &ldap_conn).await?;
@@ -120,12 +114,9 @@ pub(crate) async fn auth_edit_group_memberform(
     mut db: Connection<DB>,
     group_id: i32,
     form: Form<GroupDataMembers>,
-    user: CookieUser,
+    user: AdminUser,
 ) -> Result<Redirect, Error> {
     let app_config = app_config.inner();
-    if !user.is_admin(app_config, &ldap_conn).await? {
-        return Err(Error::Http(Status::Forbidden));
-    }
     let form = form.into_inner();
     let changes = Vec::from([Mod::Replace(
         "member".to_owned(),
@@ -138,14 +129,10 @@ pub(crate) async fn auth_edit_group_memberform(
 
 #[get("/groups/add_ldap_legitima")]
 pub(crate) async fn auth_add_ldap_legitima(
-    user: CookieUser,
+    _user: AdminUser,
     app_config: &State<AppConfig>,
-    ldap_conn: DBLdapConn,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
-    if !user.is_admin(app_config, &ldap_conn).await? {
-        return Err(Error::Http(Status::Forbidden));
-    }
     Ok(Template::render(
         "admin/groups_add_ldap_legitima",
         HashMap::<String, String>::new(),
@@ -166,12 +153,9 @@ pub(crate) async fn auth_add_ldap_legitima_form(
     ldap_conn: DBLdapConn,
     mut db: Connection<DB>,
     form: Form<Contextual<'_, AddLdapLegitimaGroupForm>>,
-    user: CookieUser,
+    user: AdminUser,
 ) -> Result<Either<Redirect, Template>, Error> {
     let app_config = app_config.inner();
-    if !user.is_admin(app_config, &ldap_conn).await? {
-        return Err(Error::Http(Status::Forbidden));
-    }
     Ok(match form.value {
         Some(ref submission) => {
             let group_dn = format!(
@@ -219,14 +203,11 @@ pub(crate) struct AddLegitimaContext {
 
 #[get("/groups/add_legitima")]
 pub(crate) async fn auth_add_legitima(
-    user: CookieUser,
+    _user: AdminUser,
     app_config: &State<AppConfig>,
     ldap_conn: DBLdapConn,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
-    if !user.is_admin(app_config, &ldap_conn).await? {
-        return Err(Error::Http(Status::Forbidden));
-    }
     let groups: Vec<String> = get_all_groups(app_config, &ldap_conn)
         .await
         .unwrap_or_default()
@@ -256,12 +237,9 @@ pub(crate) async fn auth_add_legitima_form(
     ldap_conn: DBLdapConn,
     mut db: Connection<DB>,
     form: Form<Contextual<'_, AddLegitimaGroupForm>>,
-    user: CookieUser,
+    user: AdminUser,
 ) -> Result<Either<Redirect, Template>, Error> {
     let app_config = app_config.inner();
-    if !user.is_admin(app_config, &ldap_conn).await? {
-        return Err(Error::Http(Status::Forbidden));
-    }
     Ok(match form.value {
         Some(ref submission) => {
             DBGroup::create_one(

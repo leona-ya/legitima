@@ -13,10 +13,14 @@ serde_json = "1.0.71"
 ory-hydra-client = "1.11.8"
 ldap3 = "0.9.3"
 rocket_sync_db_pools = { git = "https://github.com/leona-ya/rocket_sync_db_pools_ldap", features = [ "ldap_pool" ] }
-chrono = { version = "0.4.19", default-features = false, features = ["std", "clock"] }
+chrono = { version = "0.4.22", default-features = false, features = ["std", "clock"] }
 thiserror = "1.0"
 webauthn-rs = "0.3.2"
 url = "2.2.2"
 uuid = { version = "1", features = ["serde"] }
-rocket_db_pools = { path = "../Rocket/contrib/db_pools/lib", version = "0.1.0-rc.2", features = ["sqlx_postgres"] }
+rocket_db_pools = { path = "../Rocket/contrib/db_pools/lib", version = "0.1.0-rc.2", features = ["sqlx_postgres", "deadpool_redis"] }
 sqlx = { version = "0.6", features = ["offline", "json", "uuid"] }
+rand = "0.8.5"
+hmac = "0.12.1"
+sha2 = "0.10.2"
+hex = "0.4.3"

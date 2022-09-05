@@ -1,16 +1,18 @@
-use crate::auth::CookieUser;
 use crate::config::AppConfig;
+use crate::db::{DBUserCredential, DB};
 use crate::error::Error;
+use crate::sessions::{create_session, Session, SessionStorage, User};
 use crate::DBLdapConn;
 use rocket::form::Form;
 use rocket::http::{Cookie, CookieJar, SameSite};
 use rocket::response::Redirect;
 use rocket::serde::Serialize;
 use rocket::{Either, State};
+use rocket_db_pools::Connection;
 use rocket_dyn_templates::Template;
 
 #[get("/login")]
-pub(crate) fn auth_login(_user: CookieUser, cookies: &CookieJar<'_>) -> Result<Redirect, Error> {
+pub(crate) fn auth_login(_user: User, cookies: &CookieJar<'_>) -> Result<Redirect, Error> {
     let redirect_url = match cookies.get("redirect_url") {
         Some(cookie) => cookie.value().to_owned(),
         None => "/".to_owned(),
@@ -36,6 +38,26 @@ pub(crate) fn login(app_config: &State<AppConfig>) -> Template {
     )
 }
 
+async fn check_user_pw(
+    ldap_conn: DBLdapConn,
+    ldap_user_base_dn: String,
+    username: String,
+    password: String,
+) -> Result<bool, Error> {
+    Ok(ldap_conn
+        .run(move |c| {
+            let bind = c.simple_bind(
+                &*format!("uid={},{}", username, ldap_user_base_dn),
+                &*password,
+            );
+            c.unbind(); // TODO: Handle error
+            bind
+        })
+        .await?
+        .success()
+        .is_ok())
+}
+
 #[derive(FromForm)]
 pub(crate) struct Login {
     username: String,
@@ -46,6 +68,8 @@ pub(crate) struct Login {
 pub(crate) async fn submit(
     cookies: &CookieJar<'_>,
     ldap_conn: DBLdapConn,
+    mut db: Connection<DB>,
+    mut session_storage: Connection<SessionStorage>,
     form: Form<Login>,
     app_config: &State<AppConfig>,
 ) -> Result<Either<Template, Redirect>, Error> {
@@ -62,27 +86,18 @@ pub(crate) async fn submit(
                 message: Some("Username and password cannot be empty".to_owned()),
             },
         )));
-    } else if ldap_conn
-        .run(move |c| {
-            let bind = c.simple_bind(
-                &*format!("uid={},{}", username, ldap_user_base_dn),
-                &*password,
-            );
-            c.unbind(); // TODO: Handle error
-            bind
-        })
-        .await?
-        .success()
-        .is_ok()
-    {
+    } else if check_user_pw(ldap_conn, ldap_user_base_dn, username, password).await? {
         let redirect_url = match cookies.get("redirect_url") {
             Some(cookie) => cookie.value().to_owned(),
             None => "/".to_owned(),
         };
 
-        let mut cookie = Cookie::new("username", form.username);
-        cookie.set_same_site(SameSite::Lax);
-        cookies.add_private(cookie);
+        create_session(
+            session_storage,
+            &Session::new(form.username, true, vec!["password".to_owned()], vec![]),
+            cookies,
+        )
+        .await?;
 
         return Ok(Either::Right(Redirect::to(redirect_url)));
     }

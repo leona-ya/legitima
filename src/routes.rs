@@ -7,6 +7,7 @@ use rocket_dyn_templates::Template;
 
 use crate::config::{AppConfig, HydraConfig, WebauthnStaticConfig};
 use crate::db::DB;
+use crate::sessions::SessionStorage;
 use crate::{db, DBLdapConn};
 
 #[get("/")]
@@ -79,6 +80,7 @@ pub(crate) fn build() -> Rocket<Build> {
         .attach(Template::fairing())
         .attach(DBLdapConn::fairing())
         .attach(DB::init())
+        .attach(SessionStorage::init())
         .attach(AdHoc::try_on_ignite("SQLx Migrations", db::run_migrations))
         .attach(crate::config::ad_hoc_config::<HydraConfig>("hydra"))
         .attach(crate::config::ad_hoc_config::<AppConfig>("app"))

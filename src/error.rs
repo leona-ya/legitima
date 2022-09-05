@@ -2,6 +2,7 @@ use ory_hydra_client::apis::Error as HydraError;
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::Request;
+use rocket_db_pools::deadpool_redis::redis;
 use thiserror::Error as ThisError;
 
 #[derive(ThisError, Debug)]
@@ -16,6 +17,8 @@ pub(crate) enum Error {
     DB(#[from] sqlx::Error),
     #[error("Serde json error")]
     SerdeJSON(#[from] serde_json::Error),
+    #[error("Redis error")]
+    Redis(#[from] redis::RedisError),
 }
 
 impl<T> From<HydraError<T>> for Error {
@@ -46,6 +49,7 @@ impl<'r> Responder<'r, 'static> for Error {
             Error::Hydra { status } => Err(status),
             Error::Ldap(_) => Err(Status::InternalServerError),
             Error::SerdeJSON(_) => Err(Status::InternalServerError),
+            Error::Redis(_) => Err(Status::InternalServerError),
             Error::DB(err) => {
                 dbg!(err);
                 Err(Status::InternalServerError)

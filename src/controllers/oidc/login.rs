@@ -5,13 +5,13 @@ use rocket::response::Redirect;
 use rocket::{get, Either, State};
 use rocket_dyn_templates::Template;
 
-use crate::auth::CookieUser;
 use crate::config::HydraConfig;
 use crate::error::Error;
+use crate::sessions::User;
 
 #[get("/login?<login_challenge>")]
 pub(crate) async fn auth_index(
-    user: CookieUser,
+    user: User,
     login_challenge: &str,
     hydra_config: &State<HydraConfig>,
 ) -> Result<Either<Template, Redirect>, Error> {
