@@ -21,7 +21,8 @@
               "kind": {
                 "Enum": [
                   "webauthn_registration",
-                  "webauthn_credential"
+                  "webauthn_credential",
+                  "webauthn_authentication"
                 ]
               },
               "name": "user_credential_types"
@@ -122,7 +123,8 @@
               "kind": {
                 "Enum": [
                   "webauthn_registration",
-                  "webauthn_credential"
+                  "webauthn_credential",
+                  "webauthn_authentication"
                 ]
               },
               "name": "user_credential_types"
@@ -151,7 +153,8 @@
               "kind": {
                 "Enum": [
                   "webauthn_registration",
-                  "webauthn_credential"
+                  "webauthn_credential",
+                  "webauthn_authentication"
                 ]
               },
               "name": "user_credential_types"
@@ -173,7 +176,8 @@
               "kind": {
                 "Enum": [
                   "webauthn_registration",
-                  "webauthn_credential"
+                  "webauthn_credential",
+                  "webauthn_authentication"
                 ]
               },
               "name": "user_credential_types"
@@ -265,7 +269,8 @@
               "kind": {
                 "Enum": [
                   "webauthn_registration",
-                  "webauthn_credential"
+                  "webauthn_credential",
+                  "webauthn_authentication"
                 ]
               },
               "name": "user_credential_types"
@@ -293,7 +298,8 @@
               "kind": {
                 "Enum": [
                   "webauthn_registration",
-                  "webauthn_credential"
+                  "webauthn_credential",
+                  "webauthn_authentication"
                 ]
               },
               "name": "user_credential_types"
@@ -303,5 +309,73 @@
       }
     },
     "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<Credential>\" FROM user_credential WHERE username = $1 AND credential_type = $2"
+  },
+  "cfa73f0fd260094910445aa89085581d5bf4507dc8050a86ef55f283fb227ad3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "label",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "credential_type: DBUserCredentialTypes",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        },
+        {
+          "name": "credential_data!: Json<AuthenticationState>",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        ]
+      }
+    },
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<AuthenticationState>\" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"
   }
 }

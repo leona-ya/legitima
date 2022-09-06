@@ -109,14 +109,12 @@ pub(crate) struct GroupDataMembers {
 
 #[post("/groups/<group_id>/members", data = "<form>")]
 pub(crate) async fn auth_edit_group_memberform(
-    app_config: &State<AppConfig>,
     ldap_conn: DBLdapConn,
     mut db: Connection<DB>,
     group_id: i32,
     form: Form<GroupDataMembers>,
-    user: AdminUser,
+    _user: AdminUser,
 ) -> Result<Redirect, Error> {
-    let app_config = app_config.inner();
     let form = form.into_inner();
     let changes = Vec::from([Mod::Replace(
         "member".to_owned(),
@@ -128,11 +126,7 @@ pub(crate) async fn auth_edit_group_memberform(
 }
 
 #[get("/groups/add_ldap_legitima")]
-pub(crate) async fn auth_add_ldap_legitima(
-    _user: AdminUser,
-    app_config: &State<AppConfig>,
-) -> Result<Template, Error> {
-    let app_config = app_config.inner();
+pub(crate) async fn auth_add_ldap_legitima(_user: AdminUser) -> Result<Template, Error> {
     Ok(Template::render(
         "admin/groups_add_ldap_legitima",
         HashMap::<String, String>::new(),
@@ -153,7 +147,7 @@ pub(crate) async fn auth_add_ldap_legitima_form(
     ldap_conn: DBLdapConn,
     mut db: Connection<DB>,
     form: Form<Contextual<'_, AddLdapLegitimaGroupForm>>,
-    user: AdminUser,
+    _user: AdminUser,
 ) -> Result<Either<Redirect, Template>, Error> {
     let app_config = app_config.inner();
     Ok(match form.value {
@@ -233,13 +227,10 @@ pub(crate) struct AddLegitimaGroupForm {
 
 #[post("/groups/add_legitima", data = "<form>")]
 pub(crate) async fn auth_add_legitima_form(
-    app_config: &State<AppConfig>,
-    ldap_conn: DBLdapConn,
     mut db: Connection<DB>,
     form: Form<Contextual<'_, AddLegitimaGroupForm>>,
-    user: AdminUser,
+    _user: AdminUser,
 ) -> Result<Either<Redirect, Template>, Error> {
-    let app_config = app_config.inner();
     Ok(match form.value {
         Some(ref submission) => {
             DBGroup::create_one(

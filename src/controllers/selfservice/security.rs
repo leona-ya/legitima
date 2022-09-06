@@ -94,7 +94,6 @@ pub(crate) async fn auth_webauthn_challenge_register(
     let webauthn_static_config = webauthn_static_config.inner().clone();
     let webauthn_client = Webauthn::new(webauthn_static_config);
     let cookie_username = cookie_user.get_username().clone();
-    dbg!(&body);
     match webauthn_client.generate_challenge_register(&*cookie_username, false) {
         Ok((webauthn_challenge, webauthn_registration_state)) => {
             let db_row_id = DBUserCredential::create_one(
@@ -114,7 +113,7 @@ pub(crate) async fn auth_webauthn_challenge_register(
                 cc: webauthn_challenge,
             }))
         }
-        Err(e) => Err(Error::Http(Status::InternalServerError)),
+        Err(_) => Err(Error::Http(Status::InternalServerError)),
     }
 }
 #[post(

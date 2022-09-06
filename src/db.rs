@@ -5,7 +5,7 @@ use sqlx::pool::PoolConnection;
 use sqlx::types::Json;
 use sqlx::Postgres;
 use webauthn_rs::proto::Credential;
-use webauthn_rs::RegistrationState;
+use webauthn_rs::{AuthenticationState, RegistrationState};
 
 type Result<T, E = sqlx::Error> = std::result::Result<T, E>;
 
@@ -74,6 +74,7 @@ impl DBGroup {
 }
 
 pub(crate) trait DBUserCredentialData {}
+impl DBUserCredentialData for AuthenticationState {}
 impl DBUserCredentialData for RegistrationState {}
 impl DBUserCredentialData for Credential {}
 
@@ -91,8 +92,29 @@ pub(crate) struct DBUserCredential<D: DBUserCredentialData> {
 #[sqlx(type_name = "user_credential_types")]
 #[sqlx(rename_all = "snake_case")]
 pub(crate) enum DBUserCredentialTypes {
+    WebauthnAuthentication,
     WebauthnRegistration,
     WebauthnCredential,
+}
+
+impl DBUserCredential<AuthenticationState> {
+    pub async fn find_webauthn_authentication_by_id_and_username(
+        id: uuid::Uuid,
+        username: &str,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<DBUserCredential<AuthenticationState>> {
+        let webauthn_authentications = sqlx::query_as!(
+            DBUserCredential,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<AuthenticationState>" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"#,
+            id,
+            username,
+            DBUserCredentialTypes::WebauthnAuthentication as _
+        )
+            .fetch_one(connection)
+            .await?;
+
+        Ok(webauthn_authentications)
+    }
 }
 
 impl DBUserCredential<RegistrationState> {
@@ -131,6 +153,25 @@ impl DBUserCredential<Credential> {
 
         Ok(webauthn_credentials)
     }
+
+    // pub async fn update_counter(
+    //     id: &CredentialID,
+    //     counter: u32,
+    //     connection: &mut PoolConnection<Postgres>,
+    // ) -> Result<bool, Error> {
+    //     let rows_affected = sqlx::query!(
+    //         r#"UPDATE user_credential
+    //         SET credential_data['counter'] = $1
+    //         WHERE credential_data->>'cred_id' :: int[] = $2 :: int[];"#,
+    //         serde_json::to_value(counter)?,
+    //         id
+    //     )
+    //     .execute(connection)
+    //     .await?
+    //     .rows_affected();
+    //
+    //     Ok(rows_affected > 0)
+    // }
 }
 
 impl<D: DBUserCredentialData + Serialize + Sync> DBUserCredential<D> {

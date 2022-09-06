@@ -16,7 +16,7 @@ pub(crate) async fn auth_index(
     hydra_config: &State<HydraConfig>,
 ) -> Result<Either<Template, Redirect>, Error> {
     let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
-    let login_request =
+    let _login_request =
         ory_hydra_client::apis::admin_api::get_login_request(hydra_configuration, login_challenge)
             .await?;
     // let ids: Vec<String> = db_sql

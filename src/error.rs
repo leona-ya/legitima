@@ -50,10 +50,7 @@ impl<'r> Responder<'r, 'static> for Error {
             Error::Ldap(_) => Err(Status::InternalServerError),
             Error::SerdeJSON(_) => Err(Status::InternalServerError),
             Error::Redis(_) => Err(Status::InternalServerError),
-            Error::DB(err) => {
-                dbg!(err);
-                Err(Status::InternalServerError)
-            }
+            Error::DB(_) => Err(Status::InternalServerError),
         }
     }
 }

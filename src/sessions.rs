@@ -5,10 +5,10 @@ use crate::DBLdapConn;
 use hmac::{Hmac, Mac};
 use rand::Rng;
 use rocket::form::validate::Contains;
-use rocket::http::{Cookie, CookieJar, SameSite, Status};
-use rocket::outcome::{try_outcome, IntoOutcome};
+use rocket::http::{Cookie, CookieJar, SameSite};
+use rocket::outcome::try_outcome;
 use rocket::request::{FromRequest, Outcome};
-use rocket::{request, Request};
+use rocket::Request;
 use rocket_db_pools::deadpool_redis::redis::AsyncCommands;
 use rocket_db_pools::{deadpool_redis, Connection, Database};
 use serde::{Deserialize, Serialize};
@@ -22,13 +22,12 @@ pub(crate) struct SessionStorage(deadpool_redis::Pool);
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct Session {
-    #[serde(skip_serializing)]
-    id: Option<String>,
-    username: String,
-    auth_timestamp: String,
-    fully_authenticated: bool,
-    completed_auth_steps: Vec<String>,
-    missing_auth_steps: Vec<String>,
+    pub id: String,
+    pub username: String,
+    pub auth_timestamp: String,
+    pub fully_authenticated: bool,
+    pub completed_auth_steps: Vec<String>,
+    pub missing_auth_steps: Vec<String>,
 }
 
 #[rocket::async_trait]
@@ -73,13 +72,38 @@ impl Session {
             .collect();
 
         Session {
-            id: Some(session_id),
+            id: session_id,
             username,
             auth_timestamp: chrono::Utc::now().to_rfc3339(),
             fully_authenticated,
             completed_auth_steps,
             missing_auth_steps,
         }
+    }
+
+    async fn save(&self, mut session_storage: Connection<SessionStorage>) -> Result<(), Error> {
+        let conn = &mut *session_storage;
+        let session_string = serde_json::to_string(self)?;
+        conn.set(self.id.clone(), session_string).await?;
+        Ok(())
+    }
+
+    pub async fn finish_step(
+        mut self,
+        step: &str,
+        session_storage: Connection<SessionStorage>,
+    ) -> Result<(), Error> {
+        self.completed_auth_steps.push(step.to_owned());
+        self.missing_auth_steps.remove(
+            self.missing_auth_steps
+                .iter()
+                .position(|x| *x == step)
+                .unwrap(),
+        );
+        if self.missing_auth_steps.is_empty() {
+            self.fully_authenticated = true;
+        }
+        self.save(session_storage).await
     }
 }
 
@@ -90,17 +114,13 @@ pub(crate) async fn create_session(
 ) -> Result<(), Error> {
     let conn = &mut *session_storage;
     let session_string = serde_json::to_string(session)?;
-    let session_id = match &session.id {
-        Some(id) => id,
-        None => return Err(Error::Http(Status::InternalServerError)),
-    };
-    conn.set(session_id, session_string).await?;
+    conn.set(&session.id, session_string).await?;
 
     let mut mac = HmacSha256::new_from_slice(b"my secret and secure key").unwrap();
-    mac.update(session_id.as_bytes());
+    mac.update(session.id.as_bytes());
     let mac_result = mac.finalize().into_bytes();
 
-    let cookie_value = session_id.clone() + "." + &*hex::encode(mac_result);
+    let cookie_value = session.id.clone() + "." + &*hex::encode(mac_result);
     let mut cookie = Cookie::new("legitima_session", cookie_value);
     cookie.set_same_site(SameSite::Lax);
     cookie.set_secure(true);
@@ -159,7 +179,11 @@ impl<'r> FromRequest<'r> for User {
     async fn from_request(request: &'r Request<'_>) -> Outcome<User, Self::Error> {
         let session = try_outcome!(request.guard::<Session>().await);
 
-        Outcome::Success(User(session.username))
+        if session.fully_authenticated {
+            Outcome::Success(User(session.username))
+        } else {
+            Outcome::Forward(())
+        }
     }
 }
 
