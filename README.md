@@ -17,7 +17,9 @@ I wanted to have an easy and customizable OIDC provider with LDAP capabilities. 
   - [x] Personal Data
   - [ ] Security (Password, 2FA)
 - [ ] Two-Factor Authentication
+  - [x] WebAuthn
+  - [ ] TOTP
 - [ ] Admin area
-  - [ ] Group management in LDAP and legitima
+  - [x] Group management in LDAP and legitima
   - [ ] Client management in ORY Hydra and legitima
 - [ ] Better customization
