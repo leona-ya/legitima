@@ -3,6 +3,8 @@
     <title>{{ app_name | default(value="legitima") }}</title>
     <link rel="stylesheet" href="/static/bulma.min.css">
     <link rel="stylesheet" href="/static/base.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     {% block head %}{% endblock %}
 </head>
 <body>
