@@ -27,6 +27,26 @@
                     </tbody>
                 </table>
                 <a onclick="webAuthnRegister()" class="button">Setup</a>
+                <br><br>
+                <h5 class="is-size-5">TOTP</h5>
+                <br>
+                <table class="table is-fullwidth">
+                    <thead>
+                    <tr>
+                        <th>Label</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for credential in totp_credentials %}
+                        <tr>
+                            <td>{{ credential.1 }}</td>
+                            <td><a class="button is-small is-marginless" href="/selfservice/security/credential/{{ credential.0 }}/delete">Delete</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <a href="/selfservice/security/totp/setup/step1" class="button">Setup</a>
             </div>
         </div>
     </div>

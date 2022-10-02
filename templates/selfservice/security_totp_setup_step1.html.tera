@@ -14,24 +14,19 @@
             <div class="card-content">
                 <div class="content">
                     <h3 class="has-text-weight-light is-size-3">{{ app_name }}</h3>
-                    <h4 class="has-text-weight-bold is-size-4">Login – 2FA WebAuthn</h4>
+                    <h4 class="has-text-weight-bold is-size-4">Register TOTP</h4>
                     <hr>
-                    {% if message %}
-                    <article class="message is-warning">
-                        <div class="message-header">
-                            <p>Warning</p>
+                    <form method="post" action="step2">
+                        <div class="field">
+                            <label class="label">Label</label>
+                            <div class="control">
+                                <input class="input" name="label" type="text">
+                            </div>
                         </div>
-                        <div class="message-body">
-                            {{ message }}
-                        </div>
-                    </article>
-                    {% endif %}
+                        <button class="button is-success">Continue</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block main_extra %}
-    <script src="/static/js/pages/auth/security_webauthn_auth.js"></script>
 {% endblock %}

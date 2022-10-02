@@ -3,6 +3,7 @@ use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::Request;
 use rocket_db_pools::deadpool_redis::redis;
+use std::time::SystemTimeError;
 use thiserror::Error as ThisError;
 
 #[derive(ThisError, Debug)]
@@ -19,6 +20,10 @@ pub(crate) enum Error {
     SerdeJSON(#[from] serde_json::Error),
     #[error("Redis error")]
     Redis(#[from] redis::RedisError),
+    #[error("Standard Time Error")]
+    StandardTimeError(#[from] SystemTimeError),
+    #[error("Other")]
+    Other(#[from] Box<dyn std::error::Error>),
 }
 
 impl<T> From<HydraError<T>> for Error {
@@ -51,6 +56,8 @@ impl<'r> Responder<'r, 'static> for Error {
             Error::SerdeJSON(_) => Err(Status::InternalServerError),
             Error::Redis(_) => Err(Status::InternalServerError),
             Error::DB(_) => Err(Status::InternalServerError),
+            Error::StandardTimeError(_) => Err(Status::InternalServerError),
+            Error::Other(_) => Err(Status::InternalServerError),
         }
     }
 }

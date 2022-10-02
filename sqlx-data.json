@@ -1,38 +1,17 @@
 {
   "db": "PostgreSQL",
-  "05eeff680544848094f6a77517409891060918a0f400ede09cb52f97c6fd62f2": {
+  "0b323fd9fa9e75d7bcb1be81fbe6135e371f18f70291a8949d15ad22f98aea6b": {
     "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
-          "Varchar",
-          "Varchar",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "webauthn_registration",
-                  "webauthn_credential",
-                  "webauthn_authentication"
-                ]
-              },
-              "name": "user_credential_types"
-            }
-          },
-          "Jsonb"
+          "Bool",
+          "Uuid"
         ]
       }
     },
-    "query": "INSERT INTO user_credential (username, label, credential_type, credential_data) VALUES ($1, $2, $3, $4) RETURNING id"
+    "query": "UPDATE user_credential SET temporary = $1 WHERE id = $2"
   },
   "25a262f274c68e60e811ac123ec165ceb1c9a48a4a28a997dce8a841453d6b37": {
     "describe": {
@@ -77,13 +56,25 @@
     },
     "query": "SELECT id as \"id?\", name, ldap_dn FROM \"group\""
   },
-  "70085f9abf27b9b4d91644e0bd028b6e8ce8a9716f549e4153f2d9bb6f3ed8a0": {
+  "38d446f418c424c92bf7b1e823bf04abfdfd79f01c1fe0488a89d15998e51a3c": {
     "describe": {
       "columns": [
         {
-          "name": "ldap_dn",
+          "name": "credential_type: DBUserCredentialTypes",
           "ordinal": 0,
-          "type_info": "Varchar"
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication",
+                  "totp_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
         }
       ],
       "nullable": [
@@ -91,13 +82,13 @@
       ],
       "parameters": {
         "Left": [
-          "Int4"
+          "Text"
         ]
       }
     },
-    "query": "SELECT ldap_dn FROM \"group\" WHERE id = $1"
+    "query": "SELECT DISTINCT credential_type as \"credential_type: DBUserCredentialTypes\" FROM user_credential WHERE username = $1 AND temporary = false"
   },
-  "7c439009473d1d927c0b627637813a76c9bd2adc29dc844405870dcd450b4f67": {
+  "50017aa0b656dd48d1212fed523fd6d0a64a95b4d256d1c81565e9541f288330": {
     "describe": {
       "columns": [
         {
@@ -124,7 +115,8 @@
                 "Enum": [
                   "webauthn_registration",
                   "webauthn_credential",
-                  "webauthn_authentication"
+                  "webauthn_authentication",
+                  "totp_credential"
                 ]
               },
               "name": "user_credential_types"
@@ -132,15 +124,21 @@
           }
         },
         {
-          "name": "credential_data!: Json<RegistrationState>",
+          "name": "credential_data!: Json<AuthenticationState>",
           "ordinal": 4,
           "type_info": "Jsonb"
+        },
+        {
+          "name": "temporary",
+          "ordinal": 5,
+          "type_info": "Bool"
         }
       ],
       "nullable": [
         false,
         false,
         true,
+        false,
         false,
         false
       ],
@@ -154,7 +152,8 @@
                 "Enum": [
                   "webauthn_registration",
                   "webauthn_credential",
-                  "webauthn_authentication"
+                  "webauthn_authentication",
+                  "totp_credential"
                 ]
               },
               "name": "user_credential_types"
@@ -163,9 +162,105 @@
         ]
       }
     },
-    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<RegistrationState>\" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<AuthenticationState>\", temporary FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"
   },
-  "7cecd92a856ac6cd54b8d7eefb0d1058b34aae3b9acfa1f9c920cf92043a89c7": {
+  "51775faf4d8ded5faa623a3c96f5996ecda9870a5644fc27b1364e5220efeb20": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "label",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "credential_type: DBUserCredentialTypes",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication",
+                  "totp_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        },
+        {
+          "name": "credential_data!: Json<RegistrationState>",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "temporary",
+          "ordinal": 5,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication",
+                  "totp_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        ]
+      }
+    },
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<RegistrationState>\", temporary FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"
+  },
+  "70085f9abf27b9b4d91644e0bd028b6e8ce8a9716f549e4153f2d9bb6f3ed8a0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "ldap_dn",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT ldap_dn FROM \"group\" WHERE id = $1"
+  },
+  "7636c2a38be6df783e5131f939e93eb2fafd3a06584b7b41c188d7196c711703": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -177,18 +272,20 @@
                 "Enum": [
                   "webauthn_registration",
                   "webauthn_credential",
-                  "webauthn_authentication"
+                  "webauthn_authentication",
+                  "totp_credential"
                 ]
               },
               "name": "user_credential_types"
             }
           },
           "Jsonb",
+          "Bool",
           "Uuid"
         ]
       }
     },
-    "query": "UPDATE user_credential SET credential_type = $1, credential_data = $2 WHERE id = $3"
+    "query": "UPDATE user_credential SET credential_type = $1, credential_data = $2, temporary = $3 WHERE id = $4"
   },
   "8246b2616b595f38c763d12b17260a830d8874bf2597d95e2a8807980376e2fa": {
     "describe": {
@@ -222,6 +319,157 @@
     },
     "query": "SELECT id as \"id?\", name, ldap_dn FROM \"group\" WHERE id = $1"
   },
+  "850945d54d3e4308cb893f9d313bcaf139e783c1e61a88effc465fed49ee51af": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "label",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "credential_type: DBUserCredentialTypes",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication",
+                  "totp_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        },
+        {
+          "name": "credential_data!: Json<DBTotpCredential>",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "temporary",
+          "ordinal": 5,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication",
+                  "totp_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        ]
+      }
+    },
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<DBTotpCredential>\", temporary FROM user_credential WHERE username = $1 AND credential_type = $2"
+  },
+  "b1a6a711d105d3ed205c8e440b2bc1665b454176945166a42f2ae982beecc205": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id?",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "username",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "label",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "credential_type: DBUserCredentialTypes",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication",
+                  "totp_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        },
+        {
+          "name": "credential_data!: Json<DBTotpCredential>",
+          "ordinal": 4,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "temporary",
+          "ordinal": 5,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "webauthn_registration",
+                  "webauthn_credential",
+                  "webauthn_authentication",
+                  "totp_credential"
+                ]
+              },
+              "name": "user_credential_types"
+            }
+          }
+        ]
+      }
+    },
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<DBTotpCredential>\", temporary FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"
+  },
   "bf6069e5d2617f0cf3ba8d656d8a986169055b66ee37616d3e4fe45e04ee64b9": {
     "describe": {
       "columns": [
@@ -243,7 +491,7 @@
     },
     "query": "INSERT INTO \"group\" (name, ldap_dn) VALUES ($1, $2) RETURNING id"
   },
-  "c89a43a9013480b25443c5aed7aa962adcdc14fb862ef128196e770cf9d05fee": {
+  "c97a831b921fe98514ed6c4ffd0c36d95636fe43ece7aafd72ec10e2c295cd19": {
     "describe": {
       "columns": [
         {
@@ -270,7 +518,8 @@
                 "Enum": [
                   "webauthn_registration",
                   "webauthn_credential",
-                  "webauthn_authentication"
+                  "webauthn_authentication",
+                  "totp_credential"
                 ]
               },
               "name": "user_credential_types"
@@ -281,12 +530,18 @@
           "name": "credential_data!: Json<Credential>",
           "ordinal": 4,
           "type_info": "Jsonb"
+        },
+        {
+          "name": "temporary",
+          "ordinal": 5,
+          "type_info": "Bool"
         }
       ],
       "nullable": [
         false,
         false,
         true,
+        false,
         false,
         false
       ],
@@ -299,7 +554,8 @@
                 "Enum": [
                   "webauthn_registration",
                   "webauthn_credential",
-                  "webauthn_authentication"
+                  "webauthn_authentication",
+                  "totp_credential"
                 ]
               },
               "name": "user_credential_types"
@@ -308,74 +564,42 @@
         ]
       }
     },
-    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<Credential>\" FROM user_credential WHERE username = $1 AND credential_type = $2"
+    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<Credential>\", temporary FROM user_credential WHERE username = $1 AND credential_type = $2"
   },
-  "cfa73f0fd260094910445aa89085581d5bf4507dc8050a86ef55f283fb227ad3": {
+  "e983528a17f28b2823fbaf1353fa04396f93dd781de134840c6dda74eddc3ef3": {
     "describe": {
       "columns": [
         {
-          "name": "id?",
+          "name": "id",
           "ordinal": 0,
           "type_info": "Uuid"
-        },
-        {
-          "name": "username",
-          "ordinal": 1,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "label",
-          "ordinal": 2,
-          "type_info": "Varchar"
-        },
-        {
-          "name": "credential_type: DBUserCredentialTypes",
-          "ordinal": 3,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "webauthn_registration",
-                  "webauthn_credential",
-                  "webauthn_authentication"
-                ]
-              },
-              "name": "user_credential_types"
-            }
-          }
-        },
-        {
-          "name": "credential_data!: Json<AuthenticationState>",
-          "ordinal": 4,
-          "type_info": "Jsonb"
         }
       ],
       "nullable": [
-        false,
-        false,
-        true,
-        false,
         false
       ],
       "parameters": {
         "Left": [
-          "Uuid",
-          "Text",
+          "Varchar",
+          "Varchar",
           {
             "Custom": {
               "kind": {
                 "Enum": [
                   "webauthn_registration",
                   "webauthn_credential",
-                  "webauthn_authentication"
+                  "webauthn_authentication",
+                  "totp_credential"
                 ]
               },
               "name": "user_credential_types"
             }
-          }
+          },
+          "Jsonb",
+          "Bool"
         ]
       }
     },
-    "query": "SELECT id as \"id?\", username, label, credential_type as \"credential_type: DBUserCredentialTypes\", credential_data as \"credential_data!: Json<AuthenticationState>\" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"
+    "query": "INSERT INTO user_credential (username, label, credential_type, credential_data, temporary) VALUES ($1, $2, $3, $4, $5) RETURNING id"
   }
 }

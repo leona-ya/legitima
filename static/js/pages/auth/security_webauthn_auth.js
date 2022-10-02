@@ -72,5 +72,3 @@ function fromBase64(data) {
 function toArray(str) {
   return Uint8Array.from(str, c => c.charCodeAt(0));
 }
-
-webAuthnLogin();

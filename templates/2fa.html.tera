@@ -1,0 +1,56 @@
+{% extends "base-background" %}
+{% block head_inner %}
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="columns">
+        <div class="card column is-10-mobile is-offset-1-mobile is-6-tablet is-offset-3-tablet is-4-desktop is-offset-4-desktop">
+            <div class="card-content">
+                <div class="content">
+                    <h3 class="has-text-weight-light is-size-3">{{ app_name }}</h3>
+                    <h4 class="has-text-weight-bold is-size-4">Login – 2FA</h4>
+                    <hr>
+                    {% if "WebauthnCredential" in available_credential_types %}
+                        <h5 class="has-text-weight-bold is-size-5">WebAuthn</h5>
+                        <a class="button" onclick="webAuthnLogin();">Start Authentication</a>
+                        <br><br>
+                    {% endif %}
+                    {% if "TotpCredential" in available_credential_types %}
+                        <h5 class="has-text-weight-bold is-size-5">TOTP</h5>
+                        <form method="post" action="totp_2fa">
+                            <div class="field">
+                                <div class="control">
+                                    <input class="input" name="otp" type="text" placeholder="One time code">
+                                </div>
+                                {% if otp_error is defined %}
+                                    <p class="help is-danger">This OTP token is wrong</p>
+                                {% endif %}
+                            </div>
+                            <button class="button">Submit</button>
+                        </form>
+                    {% endif %}
+                    {% if message %}
+                    <article class="message is-warning">
+                        <div class="message-header">
+                            <p>Warning</p>
+                        </div>
+                        <div class="message-body">
+                            {{ message }}
+                        </div>
+                    </article>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block main_extra %}
+    <script src="/static/js/pages/auth/security_webauthn_auth.js"></script>
+{% endblock %}

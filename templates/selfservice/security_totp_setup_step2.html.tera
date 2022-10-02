@@ -1,0 +1,42 @@
+{% extends "base-background" %}
+{% block head_inner %}
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="columns">
+        <div class="card column is-10-mobile is-offset-1-mobile is-6-tablet is-offset-3-tablet is-4-desktop is-offset-4-desktop">
+            <div class="card-content">
+                <div class="content" >
+                    <h3 class="has-text-weight-light is-size-3">{{ app_name }}</h3>
+                    <h4 class="has-text-weight-bold is-size-4">Register TOTP</h4>
+                    <hr>
+                    <img src="data:image/png;base64,{{ totp_qr }}" width="50%" style="margin: 0 auto" class="is-block">
+                    <ul>
+                        <li><b>Secret:</b> {{ totp_secret }}</li>
+                        <li><b>Algorithm:</b>: SHA256</li>
+                        <li><b>Digits:</b> 6</li>
+                    </ul>
+                    <form method="post" action="step3">
+                        <div class="field">
+                            <label class="label">One time code</label>
+                            <div class="control">
+                                <input name="db_id" type="hidden" value="{{ totp_db_id }}">
+                                <input class="input" name="otp" type="text">
+                            </div>
+                            {% if otp_error is defined %}
+                            <p class="help is-danger">This OTP token is wrong</p>
+                            {% endif %}
+                        </div>
+                        <button class="button is-success">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

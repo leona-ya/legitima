@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::pool::PoolConnection;
 use sqlx::types::Json;
 use sqlx::Postgres;
+use totp_rs::Algorithm;
 use webauthn_rs::proto::Credential;
 use webauthn_rs::{AuthenticationState, RegistrationState};
 
@@ -73,10 +74,17 @@ impl DBGroup {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct DBTotpCredential {
+    pub algorithm: Algorithm,
+    pub secret: String,
+}
+
 pub(crate) trait DBUserCredentialData {}
 impl DBUserCredentialData for AuthenticationState {}
 impl DBUserCredentialData for RegistrationState {}
 impl DBUserCredentialData for Credential {}
+impl DBUserCredentialData for DBTotpCredential {}
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub(crate) struct DBUserCredential<D: DBUserCredentialData> {
@@ -86,6 +94,7 @@ pub(crate) struct DBUserCredential<D: DBUserCredentialData> {
     pub label: Option<String>,
     pub credential_type: DBUserCredentialTypes,
     pub credential_data: Json<D>,
+    pub temporary: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
@@ -95,6 +104,7 @@ pub(crate) enum DBUserCredentialTypes {
     WebauthnAuthentication,
     WebauthnRegistration,
     WebauthnCredential,
+    TotpCredential,
 }
 
 impl DBUserCredential<AuthenticationState> {
@@ -105,7 +115,7 @@ impl DBUserCredential<AuthenticationState> {
     ) -> Result<DBUserCredential<AuthenticationState>> {
         let webauthn_authentications = sqlx::query_as!(
             DBUserCredential,
-            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<AuthenticationState>" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"#,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<AuthenticationState>", temporary FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"#,
             id,
             username,
             DBUserCredentialTypes::WebauthnAuthentication as _
@@ -125,7 +135,7 @@ impl DBUserCredential<RegistrationState> {
     ) -> Result<DBUserCredential<RegistrationState>> {
         let webauthn_registrations = sqlx::query_as!(
             DBUserCredential,
-            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<RegistrationState>" FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"#,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<RegistrationState>", temporary FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"#,
             id,
             username,
             DBUserCredentialTypes::WebauthnRegistration as _
@@ -144,7 +154,7 @@ impl DBUserCredential<Credential> {
     ) -> Result<Vec<DBUserCredential<Credential>>> {
         let webauthn_credentials = sqlx::query_as!(
             DBUserCredential,
-            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<Credential>" FROM user_credential WHERE username = $1 AND credential_type = $2"#,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<Credential>", temporary FROM user_credential WHERE username = $1 AND credential_type = $2"#,
             username,
             DBUserCredentialTypes::WebauthnCredential as _
         )
@@ -174,17 +184,53 @@ impl DBUserCredential<Credential> {
     // }
 }
 
+impl DBUserCredential<DBTotpCredential> {
+    pub async fn find_totp_credentials_by_username(
+        username: &str,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<Vec<DBUserCredential<DBTotpCredential>>> {
+        let totp_credentials = sqlx::query_as!(
+            DBUserCredential,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<DBTotpCredential>", temporary FROM user_credential WHERE username = $1 AND credential_type = $2"#,
+            username,
+            DBUserCredentialTypes::TotpCredential as _
+        )
+            .fetch_all(connection)
+            .await?;
+
+        Ok(totp_credentials)
+    }
+    pub async fn find_totp_credentials_by_id_and_username(
+        id: uuid::Uuid,
+        username: &str,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<DBUserCredential<DBTotpCredential>> {
+        let totp_credential = sqlx::query_as!(
+            DBUserCredential,
+            r#"SELECT id as "id?", username, label, credential_type as "credential_type: DBUserCredentialTypes", credential_data as "credential_data!: Json<DBTotpCredential>", temporary FROM user_credential WHERE id = $1 AND username = $2 AND credential_type = $3"#,
+            id,
+            username,
+            DBUserCredentialTypes::TotpCredential as _
+        )
+            .fetch_one(connection)
+            .await?;
+
+        Ok(totp_credential)
+    }
+}
+
 impl<D: DBUserCredentialData + Serialize + Sync> DBUserCredential<D> {
     pub async fn create_one(
         user_credential: DBUserCredential<D>,
         connection: &mut PoolConnection<Postgres>,
     ) -> Result<uuid::Uuid> {
         let rec = sqlx::query!(
-            "INSERT INTO user_credential (username, label, credential_type, credential_data) VALUES ($1, $2, $3, $4) RETURNING id",
+            "INSERT INTO user_credential (username, label, credential_type, credential_data, temporary) VALUES ($1, $2, $3, $4, $5) RETURNING id",
             user_credential.username,
             user_credential.label,
             user_credential.credential_type as _,
-            user_credential.credential_data as _
+            user_credential.credential_data as _,
+            user_credential.temporary
         )
         .fetch_one(connection)
         .await?;
@@ -195,12 +241,14 @@ impl<D: DBUserCredentialData + Serialize + Sync> DBUserCredential<D> {
         id: uuid::Uuid,
         credential_type: DBUserCredentialTypes,
         credential_data: Json<D>,
+        temporary: bool,
         connection: &mut PoolConnection<Postgres>,
     ) -> Result<bool> {
         let rows_affected = sqlx::query!(
-            "UPDATE user_credential SET credential_type = $1, credential_data = $2 WHERE id = $3",
+            "UPDATE user_credential SET credential_type = $1, credential_data = $2, temporary = $3 WHERE id = $4",
             credential_type as _,
             credential_data as _,
+            temporary,
             id
         )
         .execute(connection)
@@ -224,6 +272,38 @@ impl<D: DBUserCredentialData + Serialize + Sync> DBUserCredential<D> {
         .rows_affected();
 
         Ok(rows_affected == 1)
+    }
+    pub async fn update_temporary(
+        id: uuid::Uuid,
+        new_state: bool,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<bool> {
+        let rows_affected = sqlx::query!(
+            "UPDATE user_credential SET temporary = $1 WHERE id = $2",
+            new_state,
+            id
+        )
+        .execute(connection)
+        .await?
+        .rows_affected();
+
+        Ok(rows_affected > 0)
+    }
+    pub async fn find_permanent_credentials_by_username(
+        username: &str,
+        connection: &mut PoolConnection<Postgres>,
+    ) -> Result<Vec<DBUserCredentialTypes>> {
+        let credentials = sqlx::query!(
+            r#"SELECT DISTINCT credential_type as "credential_type: DBUserCredentialTypes" FROM user_credential WHERE username = $1 AND temporary = false"#,
+            username,
+        )
+        .fetch_all(connection)
+        .await?;
+
+        Ok(credentials
+            .into_iter()
+            .map(|cred| cred.credential_type)
+            .collect())
     }
 }
 

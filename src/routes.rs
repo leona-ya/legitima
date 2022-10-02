@@ -37,7 +37,8 @@ pub(crate) fn build() -> Rocket<Build> {
                 crate::controllers::auth::login::auth_login,
                 crate::controllers::auth::login::login,
                 crate::controllers::auth::login::submit,
-                crate::controllers::auth::login::webauthn_2fa,
+                crate::controllers::auth::login::two_factor,
+                crate::controllers::auth::login::totp_2fa,
                 crate::controllers::auth::login::webauthn_2fa_challenge_login,
                 crate::controllers::auth::login::webauthn_2fa_login
             ],
@@ -64,6 +65,9 @@ pub(crate) fn build() -> Rocket<Build> {
                 crate::controllers::selfservice::security::auth_credential_delete,
                 crate::controllers::selfservice::security::auth_webauthn_challenge_register,
                 crate::controllers::selfservice::security::auth_webauthn_register,
+                crate::controllers::selfservice::security::auth_totp_setup_step1,
+                crate::controllers::selfservice::security::auth_totp_setup_step2,
+                crate::controllers::selfservice::security::auth_totp_setup_step3,
             ],
         )
         .mount(

@@ -1,5 +1,5 @@
 use crate::config::{AppConfig, WebauthnStaticConfig};
-use crate::db::{DBUserCredential, DBUserCredentialTypes, DB};
+use crate::db::{DBTotpCredential, DBUserCredential, DBUserCredentialTypes, DB};
 use crate::error::Error;
 use crate::sessions::{create_session, Session, SessionStorage, User};
 use crate::DBLdapConn;
@@ -12,6 +12,7 @@ use rocket::serde::Serialize;
 use rocket::{Either, State};
 use rocket_db_pools::Connection;
 use rocket_dyn_templates::{context, Template};
+use totp_rs::{Secret, TOTP};
 use webauthn_rs::proto::{PublicKeyCredential, RequestChallengeResponse};
 use webauthn_rs::{AuthenticationState, Webauthn};
 
@@ -91,7 +92,7 @@ pub(crate) async fn submit(
             },
         )));
     } else if check_user_pw(ldap_conn, ldap_user_base_dn, username, password).await? {
-        return if !DBUserCredential::find_webauthn_credentials_by_username(
+        return if !DBUserCredential::<DBTotpCredential>::find_permanent_credentials_by_username(
             &*form.username,
             &mut *db,
         )
@@ -104,13 +105,13 @@ pub(crate) async fn submit(
                     form.username,
                     false,
                     vec!["password".to_owned()],
-                    vec!["webauthn".to_owned()],
+                    vec!["2fa".to_owned()],
                 ),
                 cookies,
             )
             .await?;
 
-            Ok(Either::Right(Redirect::to(uri!("/auth/webauthn_2fa"))))
+            Ok(Either::Right(Redirect::to(uri!("/auth/2fa"))))
         } else {
             let redirect_url = match cookies.get("redirect_url") {
                 Some(cookie) => cookie.value().to_owned(),
@@ -136,22 +137,94 @@ pub(crate) async fn submit(
     )))
 }
 
-#[get("/webauthn_2fa")]
-pub(crate) fn webauthn_2fa(
+#[get("/2fa")]
+pub(crate) async fn two_factor(
     session: Session,
     app_config: &State<AppConfig>,
+    mut db: Connection<DB>,
 ) -> Result<Template, Error> {
     let app_config = app_config.inner();
-    if !session.missing_auth_steps.contains("webauthn".to_owned()) {
+    if !session.missing_auth_steps.contains("2fa".to_owned()) {
         return Err(Error::Http(Status::NotFound));
     };
+
+    let available_credential_types =
+        DBUserCredential::<DBTotpCredential>::find_permanent_credentials_by_username(
+            &*session.username,
+            &mut *db,
+        )
+        .await?;
+
     Ok(Template::render(
-        "webauthn_auth",
+        "2fa",
         context! {
-           app_name: app_config.name.clone()
+            app_name: app_config.name.clone(),
+            available_credential_types
         },
     ))
-    // session.finish_step("webauthn");
+}
+
+#[derive(FromForm, Debug)]
+pub(crate) struct TOTPAuthForm {
+    otp: String,
+}
+
+#[post("/totp_2fa", data = "<form>")]
+pub(crate) async fn totp_2fa(
+    session: Session,
+    app_config: &State<AppConfig>,
+    form: Form<TOTPAuthForm>,
+    mut db: Connection<DB>,
+    session_storage: Connection<SessionStorage>,
+    cookies: &CookieJar<'_>,
+) -> Result<Either<Redirect, Template>, Error> {
+    let form = form.into_inner();
+    let app_config = app_config.inner();
+    if !session.missing_auth_steps.contains("2fa".to_owned()) {
+        return Err(Error::Http(Status::NotFound));
+    };
+    let totp_credentials =
+        DBUserCredential::find_totp_credentials_by_username(&*session.username, &mut *db).await?;
+    for credential in totp_credentials {
+        let totp = match TOTP::new(
+            credential.credential_data.algorithm,
+            6,
+            1,
+            30,
+            Secret::Encoded(credential.credential_data.secret.clone())
+                .to_bytes()
+                .unwrap(),
+            None,
+            session.username.clone(),
+        ) {
+            Ok(totp) => totp,
+            Err(_) => continue,
+        };
+        if totp.check_current(&*form.otp)? {
+            let redirect_url = match cookies.get("redirect_url") {
+                Some(cookie) => cookie.value().to_owned(),
+                None => "/".to_owned(),
+            };
+            session.finish_step("2fa", session_storage).await?;
+
+            return Ok(Either::Left(Redirect::to(redirect_url)));
+        }
+    }
+
+    let available_credential_types =
+        DBUserCredential::<DBTotpCredential>::find_permanent_credentials_by_username(
+            &*session.username,
+            &mut *db,
+        )
+        .await?;
+
+    Ok(Either::Right(Template::render(
+        "2fa",
+        context! {
+            app_name: app_config.name.clone(),
+            available_credential_types
+        },
+    )))
 }
 
 #[derive(Serialize)]
@@ -183,6 +256,7 @@ pub(crate) async fn webauthn_2fa_challenge_login(
                     username: session.username,
                     credential_type: DBUserCredentialTypes::WebauthnAuthentication,
                     credential_data: sqlx::types::Json(webauthn_authentication_state),
+                    temporary: true,
                 },
                 &mut *db,
             )
@@ -236,7 +310,7 @@ pub(crate) async fn webauthn_2fa_login(
             // dbg!(credential.counter);
             // DBUserCredential::<Credential>::update_counter(cid, credential.counter, &mut *db)
             //     .await?;
-            session.finish_step("webauthn", session_storage).await?;
+            session.finish_step("2fa", session_storage).await?;
             Ok(redirect_url)
         }
         Err(_) => Err(Error::Http(Status::InternalServerError)),

@@ -18,9 +18,13 @@ thiserror = "1.0"
 webauthn-rs = "0.3.2"
 url = "2.2.2"
 uuid = { version = "1", features = ["serde"] }
-rocket_db_pools = { path = "../Rocket/contrib/db_pools/lib", version = "0.1.0-rc.2", features = ["sqlx_postgres", "deadpool_redis"] }
+rocket_db_pools = { version="0.1.0-rc.2", features = ["sqlx_postgres", "deadpool_redis"] }
 sqlx = { version = "0.6", features = ["offline", "json", "uuid"] }
 rand = "0.8.5"
 hmac = "0.12.1"
 sha2 = "0.10.2"
 hex = "0.4.3"
+totp-rs = { version = "3.0.1", features = ["serde_support", "qr", "gen_secret"] }
+
+[patch.crates-io]
+rocket_db_pools = { git = 'https://github.com/leona-ya/rocket_db_pools'}
