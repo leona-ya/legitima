@@ -1,7 +1,7 @@
 use ldap3::Mod;
 use rocket::form::validate::Contains;
 use rocket::form::{Contextual, Form};
-use rocket::http::{Cookie, CookieJar};
+use rocket::http::{Cookie, CookieJar, Status};
 use rocket::response::Redirect;
 use rocket::serde::Serialize;
 use rocket::{Either, State};
@@ -31,12 +31,8 @@ struct ContextGroup {
 }
 
 #[get("/groups", rank = 2)]
-pub(crate) async fn list_groups(cookies: &CookieJar<'_>) -> Redirect {
-    cookies.add(Cookie::new(
-        "redirect_url",
-        uri!("/admin", auth_list_groups()).to_string(),
-    ));
-    Redirect::to(uri!("/auth", crate::controllers::auth::login::login()))
+pub(crate) async fn list_groups(cookies: &CookieJar<'_>) -> Status {
+    Status::Forbidden
 }
 
 #[get("/groups")]
