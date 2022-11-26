@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use ory_hydra_client::apis::configuration::Configuration;
 use ory_hydra_client::models::{
-    AcceptConsentRequest, ConsentRequest, ConsentRequestSession, RejectRequest,
+    AcceptOAuth2ConsentRequest, AcceptOAuth2ConsentRequestSession, OAuth2ConsentRequest,
+    RejectOAuth2Request,
 };
 use rocket::http::Status;
 use rocket::response::Redirect;
@@ -73,7 +74,7 @@ pub(crate) async fn index(
 ) -> Result<Either<Template, Redirect>, Error> {
     let app_config = app_config.inner();
     let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
-    let consent_request = ory_hydra_client::apis::admin_api::get_consent_request(
+    let consent_request = ory_hydra_client::apis::o_auth2_api::get_o_auth2_consent_request(
         hydra_configuration,
         consent_challenge,
     )
@@ -128,7 +129,7 @@ pub(crate) async fn approve(
 ) -> Result<Redirect, Error> {
     let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
     let app_config = app_config.inner();
-    let consent_request = ory_hydra_client::apis::admin_api::get_consent_request(
+    let consent_request = ory_hydra_client::apis::o_auth2_api::get_o_auth2_consent_request(
         hydra_configuration,
         consent_challenge,
     )
@@ -151,18 +152,19 @@ pub(crate) async fn reject(
     hydra_config: &State<HydraConfig>,
 ) -> Result<Redirect, Error> {
     let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
-    let reject_consent_request = ory_hydra_client::apis::admin_api::reject_consent_request(
-        hydra_configuration,
-        consent_challenge,
-        Some(RejectRequest {
-            error: Some("access_denied".to_owned()),
-            error_debug: None,
-            error_description: Some("The user rejected the request.".to_owned()),
-            error_hint: None,
-            status_code: None,
-        }),
-    )
-    .await?;
+    let reject_consent_request =
+        ory_hydra_client::apis::o_auth2_api::reject_o_auth2_consent_request(
+            hydra_configuration,
+            consent_challenge,
+            Some(RejectOAuth2Request {
+                error: Some("access_denied".to_owned()),
+                error_debug: None,
+                error_description: Some("The user rejected the request.".to_owned()),
+                error_hint: None,
+                status_code: None,
+            }),
+        )
+        .await?;
     Ok(Redirect::to(reject_consent_request.redirect_to))
 }
 async fn accept_consent_request(
@@ -170,7 +172,7 @@ async fn accept_consent_request(
     hydra_config: &HydraConfig,
     hydra_configuration: &Configuration,
     consent_challenge: &str,
-    consent_request: ConsentRequest,
+    consent_request: OAuth2ConsentRequest,
     app_config: &AppConfig,
 ) -> Result<Redirect, Error> {
     let ldap_user_base_dn = app_config.ldap_user_base_dn.clone();
@@ -196,27 +198,31 @@ async fn accept_consent_request(
         return Err(Error::Http(Status::BadRequest));
     };
 
-    let accept_consent_request = ory_hydra_client::apis::admin_api::accept_consent_request(
-        hydra_configuration,
-        consent_challenge,
-        Some(AcceptConsentRequest {
-            grant_access_token_audience: consent_request.requested_access_token_audience,
-            grant_scope: consent_request.requested_scope.clone(),
-            handled_at: Some(chrono::Utc::now().to_rfc3339()),
-            remember: Some(hydra_config.consent_remember_me),
-            remember_for: Some(hydra_config.consent_remember_me_for),
-            session: Some(Box::new(data_to_session(
-                ldap_user_data,
-                consent_request.requested_scope.unwrap(),
-            ))),
-        }),
-    )
-    .await?;
+    let accept_consent_request =
+        ory_hydra_client::apis::o_auth2_api::accept_o_auth2_consent_request(
+            hydra_configuration,
+            consent_challenge,
+            Some(AcceptOAuth2ConsentRequest {
+                grant_access_token_audience: consent_request.requested_access_token_audience,
+                grant_scope: consent_request.requested_scope.clone(),
+                handled_at: Some(chrono::Utc::now().to_rfc3339()),
+                remember: Some(hydra_config.consent_remember_me),
+                remember_for: Some(hydra_config.consent_remember_me_for),
+                session: Some(Box::new(data_to_session(
+                    ldap_user_data,
+                    consent_request.requested_scope.unwrap(),
+                ))),
+            }),
+        )
+        .await?;
     Ok(Redirect::to(accept_consent_request.redirect_to))
 }
 
-fn data_to_session(ldap_user: ldap3::SearchEntry, scopes: Vec<String>) -> ConsentRequestSession {
-    let mut consent_request_session = ConsentRequestSession::new();
+fn data_to_session(
+    ldap_user: ldap3::SearchEntry,
+    scopes: Vec<String>,
+) -> AcceptOAuth2ConsentRequestSession {
+    let mut consent_request_session = AcceptOAuth2ConsentRequestSession::new();
     let mut id_token_data = HashMap::new();
     let default_vec: Vec<String> = Vec::new();
     let default_str = String::new();

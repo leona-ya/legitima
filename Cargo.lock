@@ -1564,9 +1564,8 @@ dependencies = [
 
 [[package]]
 name = "ory-hydra-client"
-version = "1.11.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "542926ba17eaed3720f3317014e6571c3bf108bbe503e3e355af8031b81f523a"
+version = "2.0.1"
+source = "git+https://cyberchaos.dev/leona/ory-hydra-client-rust.git#6e359b4da142706d92ccef21187fc65d2df079b3"
 dependencies = [
  "reqwest",
  "serde",

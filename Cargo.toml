@@ -10,7 +10,7 @@ rocket = { version = "0.5.0-rc.2", features = ["secrets", "json", "uuid"] }
 rocket_dyn_templates = { version = "0.1.0-rc.2", features = ["tera"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.71"
-ory-hydra-client = "1.11.8"
+ory-hydra-client = { git = "https://cyberchaos.dev/leona/ory-hydra-client-rust.git" }
 ldap3 = "0.9.3"
 rocket_sync_db_pools = { git = "https://github.com/leona-ya/rocket_sync_db_pools_ldap", features = [ "ldap_pool" ] }
 chrono = { version = "0.4.22", default-features = false, features = ["std", "clock"] }

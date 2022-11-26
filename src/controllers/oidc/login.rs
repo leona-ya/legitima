@@ -1,5 +1,5 @@
 use ory_hydra_client::apis::configuration::Configuration;
-use ory_hydra_client::models::AcceptLoginRequest;
+use ory_hydra_client::models::AcceptOAuth2LoginRequest;
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::Redirect;
 use rocket::{get, Either, State};
@@ -16,9 +16,11 @@ pub(crate) async fn auth_index(
     hydra_config: &State<HydraConfig>,
 ) -> Result<Either<Template, Redirect>, Error> {
     let hydra_configuration: &Configuration = &hydra_config.inner().as_hydra_configuration();
-    let _login_request =
-        ory_hydra_client::apis::admin_api::get_login_request(hydra_configuration, login_challenge)
-            .await?;
+    let _login_request = ory_hydra_client::apis::o_auth2_api::get_o_auth2_login_request(
+        hydra_configuration,
+        login_challenge,
+    )
+    .await?;
     // let ids: Vec<String> = db_sql
     //     .run(move |conn| {
     //         db::oauth_client::table
@@ -27,10 +29,10 @@ pub(crate) async fn auth_index(
     //     })
     //     .await?;
     // dbg!(ids);
-    let accept_login_request = ory_hydra_client::apis::admin_api::accept_login_request(
+    let accept_login_request = ory_hydra_client::apis::o_auth2_api::accept_o_auth2_login_request(
         hydra_configuration,
         login_challenge,
-        Some(AcceptLoginRequest {
+        Some(AcceptOAuth2LoginRequest {
             acr: None,
             amr: None,
             context: None,
